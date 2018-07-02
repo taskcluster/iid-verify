@@ -103,13 +103,18 @@ return_t VF_verify(char* pubkey,         size_t pubkey_length,
   BIO *bio_document = BIO_new_mem_buf(document, document_length);
   BIO *bio_pkcs7_envelope = BIO_new_mem_buf(pkcs7_envelope, pkcs7_envelope_length);
 
+  // The data structures needed for verification
   PKCS7* p7;
   X509_STORE *store = NULL;
   STACK_OF(X509) *certs = NULL;
   X509 *cert = NULL;
 
-
   if (!PEM_read_bio_PKCS7(bio_pkcs7_envelope, &p7, 0, NULL)) {
+    ERR_print_errors(bio_err);
+    return VF_FAIL;
+  }
+
+  if (!BIO_free(bio_pkcs7_envelope)) {
     ERR_print_errors(bio_err);
     return VF_FAIL;
   }
@@ -131,6 +136,11 @@ return_t VF_verify(char* pubkey,         size_t pubkey_length,
     return VF_FAIL;
   }
 
+  if (!BIO_free(bio_pubkey)) {
+    ERR_print_errors(bio_err);
+    return VF_FAIL;
+  }
+
   if (0 == sk_X509_push(certs, cert)) {
     ERR_print_errors(bio_err);
     return VF_FAIL;
@@ -140,14 +150,14 @@ return_t VF_verify(char* pubkey,         size_t pubkey_length,
     return VF_SUCCESS;
   }
 
+  if (!BIO_free(bio_document)) {
+    ERR_print_errors(bio_err);
+    return VF_FAIL;
+  }
 
-  // TODO: check return codes
   PKCS7_free(p7);
   X509_STORE_free(store);
   X509_free(cert);
-  BIO_vfree(bio_pubkey);
-  BIO_vfree(bio_document);
-  BIO_vfree(bio_pkcs7_envelope);
   sk_X509_free(certs);
 
   ERR_print_errors(bio_err);
