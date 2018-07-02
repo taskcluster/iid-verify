@@ -103,68 +103,39 @@ return_t VF_verify(char* pubkey,         size_t pubkey_length,
   BIO *bio_document = BIO_new_mem_buf(document, document_length);
   BIO *bio_pkcs7_envelope = BIO_new_mem_buf(pkcs7_envelope, pkcs7_envelope_length);
 
-  // Read our PKCS7 document into a PKCS7 data structure
   PKCS7* p7;
   if (!PEM_read_bio_PKCS7(bio_pkcs7_envelope, &p7, 0, NULL)) {
     ERR_print_errors(bio_err);
     return VF_FAIL;
   }
-  BIO_printf(bio_out, "loaded PKCS#7\n");
 
-  // Set up an X509 store
   X509_STORE *store = X509_STORE_new();
   if (store == NULL) {
     ERR_print_errors(bio_err);
     return VF_FAIL;
   }
-  BIO_printf(bio_out, "created X509 store\n");
 
-  // Setup an X509 lookup... not sure why
-  X509_LOOKUP *lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file());
-  if (lookup == NULL) {
-    ERR_print_errors(bio_err);
-    return VF_FAIL;
-  }
-  X509_LOOKUP_load_file(lookup, NULL, X509_FILETYPE_DEFAULT);
-  BIO_printf(bio_out, "added lookup to X509 store\n");
-
-  // Now we need to build up a stack of X509 documents which we'll verify with.
   STACK_OF(X509) *certs = sk_X509_new_null();
   if (certs == NULL) {
     ERR_print_errors(bio_err);
     return VF_FAIL;
   }
-  BIO_printf(bio_out, "created X509 stack\n");
 
-  // Let's load the X509 document and then load it in to the stack
   X509 *cert = NULL;
   if (!PEM_read_bio_X509(bio_pubkey, &cert, 0, NULL)) {
     ERR_print_errors(bio_err);
     return VF_FAIL;
   }
-  BIO_printf(bio_out, "read X509 pubkey\n");
 
   if (0 == sk_X509_push(certs, cert)) {
     ERR_print_errors(bio_err);
     return VF_FAIL;
   }
-  BIO_printf(bio_out, "added X509 pubkey to stack\n");
 
-  // Do verification
-  // int PKCS7_verify(PKCS7 *p7, STACK_OF(X509) *certs, X509_STORE *store, BIO *indata, BIO *out, int flags);
-  // TODO:
-  //   - figure out how to build X, a stack of x509 certs
-  //   - figure out output -- for now, NULL might do the trick
-  //   - figure out flags -- for now, 0 might do the trick
-  //
-  //
-  // Notes:
-  //    - The flags we're using are 0 because they seem to be mostly relevant to the signing process
   if (1 == PKCS7_verify(p7, certs, store, bio_document, bio_err, PKCS7_NOINTERN|PKCS7_NOVERIFY)) {
     BIO_printf(bio_out, "verified document\n");
     return VF_SUCCESS;
   }
-
 
   // TODO: check return codes
   PKCS7_free(p7);
