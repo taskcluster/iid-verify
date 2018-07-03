@@ -5,14 +5,14 @@ const fs = require('fs');
 describe('verify', () => {
   let pubkey;
   let document;
-  let pkcs7_envelope;
-  let pkcs7_envelope_with_header;
+  let pkcs7;
+  let pkcs7_with_header;
 
   beforeEach(() => {
     pubkey = fs.readFileSync('./test-files/rsa2048-pubkey');
     document = fs.readFileSync('./test-files/document');
-    pkcs7_envelope = fs.readFileSync('./test-files/rsa2048');
-    pkcs7_envelope_with_header = fs.readFileSync('./test-files/rsa2048-with-header');
+    pkcs7 = fs.readFileSync('./test-files/rsa2048');
+    pkcs7_with_header = fs.readFileSync('./test-files/rsa2048-with-header');
 
   });
 
@@ -36,10 +36,10 @@ describe('verify', () => {
         subject('x', undefined, 'z');
       }).throws(/^document must be provided$/);
     });
-    it('should throw when pkcs7_envelope isnt provided', () => {
+    it('should throw when pkcs7 isnt provided', () => {
       assume(() => {
         subject('x', 'y', undefined);
-      }).throws(/^pkcs7_envelope must be provided$/);
+      }).throws(/^pkcs7 must be provided$/);
     });
   });
 
@@ -67,19 +67,19 @@ describe('verify', () => {
 
   describe('with valid files', () => {
     it('should validate valid credentials with header in buffer', () => {
-      assume(subject(pubkey, document, pkcs7_envelope)).is.ok();
+      assume(subject(pubkey, document, pkcs7)).is.ok();
     });
 
     it('should validate valid credentials without header in buffer', () => {
-      assume(subject(pubkey, document, pkcs7_envelope_with_header)).is.ok();
+      assume(subject(pubkey, document, pkcs7_with_header)).is.ok();
     });
 
     it('should validate valid credentials with header in string', () => {
-      assume(subject(pubkey.toString(), document.toString(), pkcs7_envelope.toString())).is.ok();
+      assume(subject(pubkey.toString(), document.toString(), pkcs7.toString())).is.ok();
     });
 
     it('should validate valid credentials without header in string', () => {
-      assume(subject(pubkey.toString(), document.toString(), pkcs7_envelope_with_header.toString())).is.ok();
+      assume(subject(pubkey.toString(), document.toString(), pkcs7_with_header.toString())).is.ok();
     });
   });
 
@@ -92,7 +92,7 @@ describe('verify', () => {
           document,
           Buffer.from([i]),
         ]);
-        assume(subject(pubkey, badDoc, pkcs7_envelope_with_header)).is.not.ok();
+        assume(subject(pubkey, badDoc, pkcs7_with_header)).is.not.ok();
       }
     });
 
@@ -109,7 +109,7 @@ describe('verify', () => {
             parseInt(badDoc[i] ^ (1 << j), 10).toString(2),
           ].join(' '))*/
           badDoc[i] = badDoc[i] ^ (1 << j);
-          assume(subject(pubkey, badDoc, pkcs7_envelope_with_header)).is.not.ok();
+          assume(subject(pubkey, badDoc, pkcs7_with_header)).is.not.ok();
         }
       }
     });
@@ -134,7 +134,7 @@ describe('verify', () => {
           badPubkey = Buffer.from('-----BEGIN CERTIFICATE-----\n'
                                   + badPubkey.toString('base64')
                                   + '\n-----END CERTIFICATE-----\n');
-          assume(subject(badPubkey, document, pkcs7_envelope_with_header)).is.not.ok();
+          assume(subject(badPubkey, document, pkcs7_with_header)).is.not.ok();
         }
       }
     });
@@ -145,7 +145,7 @@ describe('verify', () => {
     // because of a self-signed certificate being used (i.g. -noverify)
     it('should fail for bitflips on signature data', () => {
       let x = new Array();
-      let sigdata = Buffer.from(pkcs7_envelope).toString('ascii');
+      let sigdata = Buffer.from(pkcs7).toString('ascii');
       sigdata = Buffer.from(sigdata, 'base64');
 
       // I got the values here by using an ASN.1 decoder to find the
