@@ -65,4 +65,4 @@ module.exports = function verify(pubkey, document, pkcs7) {
     pubkey, pubkey.length,
     document, document.length,
     pkcs7, pkcs7.length);
-}
+};
