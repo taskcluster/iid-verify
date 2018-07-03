@@ -10,7 +10,7 @@ const nl = '\n'.charAt(0);
  * which can be converted into a Buffer safely with a call to Buffer.from(),
  * with an encoding parameter of 'utf-8'.
  */
-module.exports = function verify(pubkey, document, pkcs7_envelope) {
+module.exports = function verify(pubkey, document, pkcs7) {
   if (typeof pubkey === 'undefined') {
     throw new Error('pubkey must be provided');
   }
@@ -19,8 +19,8 @@ module.exports = function verify(pubkey, document, pkcs7_envelope) {
     throw new Error('document must be provided');
   }
 
-  if (typeof pkcs7_envelope === 'undefined') {
-    throw new Error('pkcs7_envelope must be provided');
+  if (typeof pkcs7 === 'undefined') {
+    throw new Error('pkcs7 must be provided');
   }
 
   if (!Buffer.isBuffer(pubkey)) {
@@ -31,14 +31,14 @@ module.exports = function verify(pubkey, document, pkcs7_envelope) {
     document = Buffer.from(document, 'utf-8');
   }
 
-  if (!Buffer.isBuffer(pkcs7_envelope)) {
-    pkcs7_envelope = Buffer.from(pkcs7_envelope, 'utf-8');
+  if (!Buffer.isBuffer(pkcs7)) {
+    pkcs7 = Buffer.from(pkcs7, 'utf-8');
   }
 
   // TODO: handle the case where pkcs7 doens't have a header
   hasHeader = true;
   for (let i = 0; i < pkcs7_header.length && hasHeader; i++) {
-    if (pkcs7_envelope[i] !== pkcs7_header[i]) {
+    if (pkcs7[i] !== pkcs7_header[i]) {
       hasHeader = false;
     }
   }
@@ -47,17 +47,17 @@ module.exports = function verify(pubkey, document, pkcs7_envelope) {
   // valid and ready to pass into the verification routines, if not, we'll
   // trim any leading and trailing newlines so that the headers are valid
   if (!hasHeader) {
-    while (pkcs7_envelope.length > 0 && pkcs7_envelope.indexOf(nl) === 0) {
-      pkcs7_envelope = pkcs7_envelope.slice(1);
+    while (pkcs7.length > 0 && pkcs7.indexOf(nl) === 0) {
+      pkcs7 = pkcs7.slice(1);
     }
 
-    while (pkcs7_envelope.length > 0 && pkcs7_envelope.lastIndexOf(nl) === pkcs7_envelope.length - 1) {
-      pkcs7_envelope = pkcs7_envelope.slice(0, pkcs7_envelope.length - 1);
+    while (pkcs7.length > 0 && pkcs7.lastIndexOf(nl) === pkcs7.length - 1) {
+      pkcs7 = pkcs7.slice(0, pkcs7.length - 1);
     }
 
-    pkcs7_envelope = Buffer.concat([
+    pkcs7 = Buffer.concat([
       pkcs7_header,
-      pkcs7_envelope,
+      pkcs7,
       pkcs7_footer,
     ]);
   }
@@ -65,5 +65,5 @@ module.exports = function verify(pubkey, document, pkcs7_envelope) {
   return addon.verify(
     pubkey, pubkey.length,
     document, document.length,
-    pkcs7_envelope, pkcs7_envelope.length);
+    pkcs7, pkcs7.length);
 }
