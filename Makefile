@@ -1,11 +1,14 @@
 BENCH_ITER=10
+
 .PHONY: memtests
 memtests: src/verify.c src/tests.c
+	clang-format -i src/*.c src/*.h
 	clang -g $? -o ./$@ -Wall -Werror -lcrypto -lefence -DEXTRA_DEBUG -DBENCH_ITER=$(BENCH_ITER)
 	valgrind --leak-check=full ./$@
 
 .PHONY: ctests
 ctests: src/verify.c src/tests.c
+	clang-format -i src/*.c src/*.h
 	clang -g $? -o ./$@ -Wall -Werror -lcrypto -DEXTRA_DEBUG -DBENCH_ITER=100000
 	./$@
 

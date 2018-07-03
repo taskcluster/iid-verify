@@ -15,8 +15,7 @@ return_t VF_init();
 // Given a public key, a document and a PKCS#7 envelope as well as their
 // respective lenghts, return VF_SUCCESS if the document signature is correct
 // for the given public key
-return_t VF_verify(char* pubkey,   uint64_t pubkey_l,
-                   char* document, uint64_t document_l,
-                   char* pkcs7,    uint64_t pkcs7_l);
+return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
+                   uint64_t document_l, char *pkcs7, uint64_t pkcs7_l);
 
 #endif
