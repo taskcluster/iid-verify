@@ -14,7 +14,6 @@
         '-Werror'
       ],
       'ldflags': [
-        '-lssl',
         '-lcrypto'
       ],
       'sources': [
