@@ -5,12 +5,9 @@
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
 #include <openssl/pem.h>
+#include <stdint.h>
 
-// Store the return value of the code.  Like command line tools, a value >=1
-// will be a failure and == 0 will be success.
-typedef unsigned int return_t;
-#define VF_SUCCESS 0
-#define VF_FAIL 1
+#include "./verify.h"
 
 return_t VF_init() {
     ERR_load_crypto_strings();
@@ -26,9 +23,9 @@ return_t VF_init() {
 //  - make sure that all return values are correct read
 //  - consider using ERR_get_error (iirc) to get actual error reasons
 //  - make sure we're correctly forcing FORMAT_PEM
-return_t VF_verify(char* pubkey,         size_t pubkey_length,
-                   char* document,       size_t document_length,
-                   char* pkcs7_envelope, size_t pkcs7_envelope_length) {
+return_t VF_verify(char* pubkey,         uint64_t pubkey_length,
+                   char* document,       uint64_t document_length,
+                   char* pkcs7_envelope, uint64_t pkcs7_envelope_length) {
   return_t rv = VF_FAIL;
 
   // First, we need to convert from C-strings into BIOs backed by memory

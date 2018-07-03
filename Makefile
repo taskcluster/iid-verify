@@ -9,6 +9,9 @@ ctests: src/verify.c src/tests.c
 	clang -g $? -o ./$@ -Wall -Werror -lcrypto -DEXTRA_DEBUG -DBENCH_ITER=100000
 	./$@
 
+.PHONY: shell-tests
+	./test-cmdline.sh
+
 .PHONY: test
-test: ctests
+test: memtests ctests shell-tests
 	./test-cmdline.sh

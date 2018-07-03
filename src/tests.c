@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 #include <openssl/bio.h>
 #include <openssl/cms.h>
 #include <openssl/err.h>
@@ -134,9 +134,12 @@ int main(void) {
   }
 
   int failed_iterations = 0;
-  time_t start = time(NULL);
-  time_t end;
+  struct timeval start;
+  struct timeval end;
   int iter = BENCH_ITER;
+
+  gettimeofday(&start, NULL);
+
   for (int i = 0 ; i < iter ; i++ ) {
     outcome = VF_verify(pubkey, pubkey_l,
                             document, document_l,
@@ -145,11 +148,15 @@ int main(void) {
       failed_iterations++;
     }
   }
-  end = time(NULL);
-  printf("Completed %d iterations in %ld seconds, %f per iteration\n",
+
+  gettimeofday(&end, NULL);
+
+  long duration = (end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec;
+
+  printf("Completed %d iterations in %0.4f seconds, %0.4fus per iteration\n",
       iter,
-      end - start,
-      (end - start) / (float)iter);
+      duration/1000000.0,
+      duration / (double)iter);
   tests++;
   if (0 == failed_iterations) {
     pass++;
