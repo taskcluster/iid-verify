@@ -22,15 +22,17 @@ return_t VF_init() {
 //  - make sure that all return values are correct read
 //  - consider using ERR_get_error (iirc) to get actual error reasons
 //  - make sure we're correctly forcing FORMAT_PEM
-return_t VF_verify(char *pubkey, uint64_t pubkey_length, char *document,
-                   uint64_t document_length, char *pkcs7,
-                   uint64_t pkcs7_length) {
-  return_t rv = VF_FAIL;
+return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
+                   uint64_t document_l, char *pkcs7, uint64_t pkcs7_l) {
+  // We want to clear the OpenSSL Error queue so that we know when we're in the
+  // cleanup section, any errors we hit are the result of this invocation
+  ERR_clear_error();
+  return_t rv;
 
   // First, we need to convert from C-strings into BIOs backed by memory
-  BIO *bio_pubkey = BIO_new_mem_buf(pubkey, pubkey_length);
-  BIO *bio_document = BIO_new_mem_buf(document, document_length);
-  BIO *bio_pkcs7 = BIO_new_mem_buf(pkcs7, pkcs7_length);
+  BIO *bio_pubkey = BIO_new_mem_buf(pubkey, pubkey_l);
+  BIO *bio_document = BIO_new_mem_buf(document, document_l);
+  BIO *bio_pkcs7 = BIO_new_mem_buf(pkcs7, pkcs7_l);
 
   // We don't want the BIO_close method here to free() the memory passed in
   // BIO_set_close(bio_pubkey, BIO_NOCLOSE);
