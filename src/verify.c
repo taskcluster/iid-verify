@@ -1,20 +1,20 @@
 #include <openssl/bio.h>
 #include <openssl/cms.h>
 #include <openssl/err.h>
+#include <openssl/pem.h>
 #include <openssl/safestack.h>
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
-#include <openssl/pem.h>
 
 #include "./verify.h"
 
 return_t VF_init() {
-    ERR_load_crypto_strings();
-    OpenSSL_add_all_algorithms();
-    // Since none of these functions return useful error messages, per the
-    // openssl wiki documentation, we're just going to return success status.
-    // If this changes in future, we have the option to start failing
-    return VF_SUCCESS;
+  ERR_load_crypto_strings();
+  OpenSSL_add_all_algorithms();
+  // Since none of these functions return useful error messages, per the
+  // openssl wiki documentation, we're just going to return success status.
+  // If this changes in future, we have the option to start failing
+  return VF_SUCCESS;
 }
 
 // TODO:
@@ -22,9 +22,9 @@ return_t VF_init() {
 //  - make sure that all return values are correct read
 //  - consider using ERR_get_error (iirc) to get actual error reasons
 //  - make sure we're correctly forcing FORMAT_PEM
-return_t VF_verify(char* pubkey,   uint64_t pubkey_length,
-                   char* document, uint64_t document_length,
-                   char* pkcs7,    uint64_t pkcs7_length) {
+return_t VF_verify(char *pubkey, uint64_t pubkey_length, char *document,
+                   uint64_t document_length, char *pkcs7,
+                   uint64_t pkcs7_length) {
   return_t rv = VF_FAIL;
 
   // First, we need to convert from C-strings into BIOs backed by memory
@@ -33,12 +33,12 @@ return_t VF_verify(char* pubkey,   uint64_t pubkey_length,
   BIO *bio_pkcs7 = BIO_new_mem_buf(pkcs7, pkcs7_length);
 
   // We don't want the BIO_close method here to free() the memory passed in
-  //BIO_set_close(bio_pubkey, BIO_NOCLOSE);
-  //BIO_set_close(bio_document, BIO_NOCLOSE);
-  //BIO_set_close(bio_pkcs7, BIO_NOCLOSE);
+  // BIO_set_close(bio_pubkey, BIO_NOCLOSE);
+  // BIO_set_close(bio_document, BIO_NOCLOSE);
+  // BIO_set_close(bio_pkcs7, BIO_NOCLOSE);
 
   // The data structures needed for verification
-  PKCS7* p7;
+  PKCS7 *p7;
   X509_STORE *store = NULL;
   STACK_OF(X509) *certs = NULL;
   X509 *cert = NULL;
@@ -81,12 +81,14 @@ return_t VF_verify(char* pubkey,   uint64_t pubkey_length,
     goto end;
   }
 
-  if (1 == PKCS7_verify(p7, certs, store, bio_document, NULL, PKCS7_NOINTERN|PKCS7_NOVERIFY)) {
+  if (1 == PKCS7_verify(p7, certs, store, bio_document, NULL,
+                        PKCS7_NOINTERN | PKCS7_NOVERIFY)) {
     rv = VF_SUCCESS;
   }
 
 end:
-  if (!BIO_free(bio_document) || !BIO_free(bio_pubkey) || !BIO_free(bio_pkcs7)) {
+  if (!BIO_free(bio_document) || !BIO_free(bio_pubkey) ||
+      !BIO_free(bio_pkcs7)) {
     rv = VF_FAIL;
   }
 
@@ -96,4 +98,3 @@ end:
   X509_free(cert);
   return rv;
 }
-

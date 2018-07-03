@@ -4,7 +4,9 @@
     "node-gyp": "^3.6.2"
   },
   "scripts": {
-    "pretest": "node-gyp rebuild",
+    "preinstall": "clang-format -i src/*.c src/*.h",
+    "prepublish": "clang-format -i src/*.c src/*.h",
+    "pretest": "clang-format -i src/*.c src/*.h && node-gyp rebuild",
     "other-tests": "make test",
     "test": "mocha"
   },

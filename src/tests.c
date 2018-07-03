@@ -1,14 +1,14 @@
+#include <openssl/bio.h>
+#include <openssl/cms.h>
+#include <openssl/err.h>
+#include <openssl/pem.h>
+#include <openssl/safestack.h>
+#include <openssl/x509.h>
+#include <openssl/x509_vfy.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include <openssl/bio.h>
-#include <openssl/cms.h>
-#include <openssl/err.h>
-#include <openssl/safestack.h>
-#include <openssl/x509.h>
-#include <openssl/x509_vfy.h>
-#include <openssl/pem.h>
 
 #include "./verify.h"
 
@@ -21,7 +21,7 @@ BIO *bio_out, *bio_err;
 
 // Returns the number of bytes read, and sets the contents ** to the start
 // of the memory buffer
-return_t read_complete_file(char* filename, char** value, long* length) {
+return_t read_complete_file(char *filename, char **value, long *length) {
   FILE *f = fopen(filename, "r");
   if (!f) {
     perror("opening file");
@@ -67,15 +67,15 @@ return_t read_complete_file(char* filename, char** value, long* length) {
 //
 // NOTE: This code is only intended for testing/debugging
 void print_bio_s_mem(BIO *bio, size_t len) {
-  char* value = malloc(sizeof(char) * len);
+  char *value = malloc(sizeof(char) * len);
   BIO_read(bio, value, len);
   BIO_write(bio_out, value, len);
   BIO_printf(bio_out, "\n");
   free(value);
 }
 
-char* memdup(char* src, long len) {
-  char* x = malloc(len);
+char *memdup(char *src, long len) {
+  char *x = malloc(len);
   memcpy(x, src, len);
   return x;
 }
@@ -86,33 +86,36 @@ int main(void) {
   bio_out = BIO_new_fp(stdout, BIO_NOCLOSE);
   bio_err = BIO_new_fp(stderr, BIO_NOCLOSE);
 
-  char* pubkey;
+  char *pubkey;
   long pubkey_l;
-  if (VF_FAIL == read_complete_file("./test-files/rsa2048-pubkey", &pubkey, &pubkey_l)) {
+  if (VF_FAIL ==
+      read_complete_file("./test-files/rsa2048-pubkey", &pubkey, &pubkey_l)) {
     BIO_printf(bio_err, "failed to read rsa2048 public key file");
     exit(1);
   }
 
-  char* document;
+  char *document;
   long document_l;
-  if (VF_FAIL == read_complete_file("./test-files/document", &document, &document_l)) {
+  if (VF_FAIL ==
+      read_complete_file("./test-files/document", &document, &document_l)) {
     BIO_printf(bio_err, "failed to read clear text document");
     exit(1);
   }
 
-  char* signature;
+  char *signature;
   long signature_l;
   // Note that we have a special version of the RSA2048 PKCS#7 document that
   // has the headers added to it.  This is something that Amazon does not
   // provide, but doing that check is significantly easier from the JS part of
   // this library
-  if (VF_FAIL == read_complete_file("./test-files/rsa2048-with-header", &signature, &signature_l)) {
+  if (VF_FAIL == read_complete_file("./test-files/rsa2048-with-header",
+                                    &signature, &signature_l)) {
     BIO_printf(bio_err, "failed to read PKCS#7 signature");
   }
 
-  char* invalid_pubkey = memdup(pubkey, pubkey_l);
-  char* invalid_document = memdup(document, document_l);
-  char* invalid_signature = memdup(signature, signature_l);
+  char *invalid_pubkey = memdup(pubkey, pubkey_l);
+  char *invalid_document = memdup(document, document_l);
+  char *invalid_signature = memdup(signature, signature_l);
 
   invalid_pubkey[20] ^= 1;
   invalid_document[20] ^= 1;
@@ -123,9 +126,8 @@ int main(void) {
   int pass = 0, tests = 0, outcome = VF_FAIL;
   ///////////////////////////////////////////////
   // Test a valid thing
-  outcome = VF_verify(pubkey, pubkey_l,
-                          document, document_l,
-                          signature, signature_l);
+  outcome =
+      VF_verify(pubkey, pubkey_l, document, document_l, signature, signature_l);
   tests++;
   if (outcome == VF_SUCCESS) {
     pass++;
@@ -140,10 +142,9 @@ int main(void) {
 
   gettimeofday(&start, NULL);
 
-  for (int i = 0 ; i < iter ; i++ ) {
-    outcome = VF_verify(pubkey, pubkey_l,
-                            document, document_l,
-                            signature, signature_l);
+  for (int i = 0; i < iter; i++) {
+    outcome = VF_verify(pubkey, pubkey_l, document, document_l, signature,
+                        signature_l);
     if (outcome != VF_SUCCESS) {
       failed_iterations++;
     }
@@ -151,12 +152,11 @@ int main(void) {
 
   gettimeofday(&end, NULL);
 
-  long duration = (end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec;
+  long duration =
+      (end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec;
 
   printf("Completed %d iterations in %0.4f seconds, %0.4fus per iteration\n",
-      iter,
-      duration/1000000.0,
-      duration / (double)iter);
+         iter, duration / 1000000.0, duration / (double)iter);
   tests++;
   if (0 == failed_iterations) {
     pass++;
@@ -164,12 +164,10 @@ int main(void) {
     fprintf(stderr, "FAIL: multiple iterations");
   }
 
-
   ///////////////////////////////////////////////
   // Test an invalid document
-  outcome = VF_verify(pubkey, pubkey_l,
-                      invalid_document, document_l,
-                      signature, signature_l);
+  outcome = VF_verify(pubkey, pubkey_l, invalid_document, document_l, signature,
+                      signature_l);
   tests++;
   if (outcome == VF_FAIL) {
     pass++;
@@ -179,9 +177,8 @@ int main(void) {
 
   ///////////////////////////////////////////////
   // Test an invalid pubkey
-  outcome = VF_verify(invalid_pubkey, pubkey_l,
-                      document, document_l,
-                      signature, signature_l);
+  outcome = VF_verify(invalid_pubkey, pubkey_l, document, document_l, signature,
+                      signature_l);
   tests++;
   if (outcome == VF_FAIL) {
     pass++;
@@ -191,9 +188,8 @@ int main(void) {
 
   ///////////////////////////////////////////////
   // Test an invalid signature
-  outcome = VF_verify(pubkey, pubkey_l,
-                      document, document_l,
-                      invalid_signature, signature_l);
+  outcome = VF_verify(pubkey, pubkey_l, document, document_l, invalid_signature,
+                      signature_l);
   tests++;
   if (outcome == VF_FAIL) {
     pass++;
