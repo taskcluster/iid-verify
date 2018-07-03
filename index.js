@@ -35,7 +35,6 @@ module.exports = function verify(pubkey, document, pkcs7) {
     pkcs7 = Buffer.from(pkcs7, 'utf-8');
   }
 
-  // TODO: handle the case where pkcs7 doens't have a header
   hasHeader = true;
   for (let i = 0; i < pkcs7_header.length && hasHeader; i++) {
     if (pkcs7[i] !== pkcs7_header[i]) {
