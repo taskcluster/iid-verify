@@ -1,4 +1,4 @@
-const subject = require('./')
+const subject = require('./');
 const assume = require('assume');
 const fs = require('fs');
 
@@ -83,7 +83,6 @@ describe('verify', () => {
     });
   });
 
-
   // Slightly, as in off by a very small amount
   describe('with slightly invalid files', () => {
     it('should fail to validate with an extra character on document', () => {
@@ -108,7 +107,7 @@ describe('verify', () => {
             ' -> ',
             parseInt(badDoc[i] ^ (1 << j), 10).toString(2),
           ].join(' '))*/
-          badDoc[i] = badDoc[i] ^ (1 << j);
+          badDoc[i] ^= 1 << j;
           assume(subject(pubkey, badDoc, pkcs7_with_header)).is.not.ok();
         }
       }
@@ -121,8 +120,8 @@ describe('verify', () => {
     it('should fail for bitflips on public key data', () => {
       let pubkeydata = Buffer.from(pubkey).toString('ascii');
       pubkeydata = pubkeydata.replace(/\n/g, '');
-      pubkeydata = pubkeydata.replace(/-----BEGIN CERTIFICATE-----/g, '')
-      pubkeydata = pubkeydata.replace(/-----END CERTIFICATE-----/g, '')
+      pubkeydata = pubkeydata.replace(/-----BEGIN CERTIFICATE-----/g, '');
+      pubkeydata = pubkeydata.replace(/-----END CERTIFICATE-----/g, '');
       pubkeydata = Buffer.from(pubkeydata, 'base64');
 
       const rsaStart = 289 + 4; // 286 is offset, 4 is header size
@@ -130,7 +129,7 @@ describe('verify', () => {
       for (let i = rsaStart; i < rsaEnd; i++) {
         for (let j = 0; j < 8; j++) {
           let badPubkey = Buffer.from(pubkeydata);
-          badPubkey[i] = badPubkey[i] ^ (1 << j);
+          badPubkey[i] ^= 1 << j;
           badPubkey = Buffer.from('-----BEGIN CERTIFICATE-----\n'
                                   + badPubkey.toString('base64')
                                   + '\n-----END CERTIFICATE-----\n');
@@ -160,7 +159,7 @@ describe('verify', () => {
         }
         for (let j = 0; j < 8; j++) {
           let badP7 = Buffer.from(sigdata);
-          badP7[i] = badP7[i] ^ (1 << j);
+          badP7[i] ^= 1 << j;
           badP7 = Buffer.from('-----BEGIN PKCS7-----\n'
                               + badP7.toString('base64')
                               + '\n-----END PKCS7-----\n');

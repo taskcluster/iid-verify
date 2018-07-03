@@ -4,11 +4,12 @@
     "node-gyp": "^3.6.2"
   },
   "scripts": {
-    "preinstall": "clang-format -i src/*.c src/*.h",
-    "prepublish": "clang-format -i src/*.c src/*.h",
-    "pretest": "clang-format -i src/*.c src/*.h && node-gyp rebuild",
+    "preinstall": "eslint --fix *.js && clang-format -i src/*.c src/*.h",
+    "prepublish": "eslint --fix *.js && clang-format -i src/*.c src/*.h",
+    "pretest": "eslint --fix *.js && clang-format -i src/*.c src/*.h && node-gyp rebuild",
     "other-tests": "make test",
-    "test": "mocha"
+    "test": "mocha",
+    "lint": "eslint --fix *.js"
   },
   "enginesStrict": true,
   "engines": {
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "assume": "^2.1.0",
+    "eslint-config-taskcluster": "^3.1.0",
     "mocha": "^5.2.0"
   }
 }
