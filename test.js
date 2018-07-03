@@ -63,6 +63,18 @@ describe('verify', () => {
     it('should return false with all new-line buffer values', () => {
       assume(subject(Buffer.from('\n\n\n'), Buffer.from('\n\n\n'), Buffer.from('\n\n\n'))).is.not.ok();
     });
+
+    it('should throw error with invalid cert structured data', () => {
+      assume(() => {
+        subject(pubkey, '', 'kaldsjflasjflsdf');
+      }).throws(/PEM_ASN1_read_bio/);
+    });
+
+    it('should throw error with invalid structured data', () => {
+      assume(() => {
+        subject('kadjflakdjfa', '', pkcs7);
+      }).throws(/PEM_read_bio/);
+    });
   });
 
   describe('with valid files', () => {
@@ -163,7 +175,15 @@ describe('verify', () => {
           badP7 = Buffer.from('-----BEGIN PKCS7-----\n'
                               + badP7.toString('base64')
                               + '\n-----END PKCS7-----\n');
-          assume(subject(pubkey, document, badP7)).is.not.ok();
+          try {
+            assume(subject(pubkey, document, badP7)).is.not.ok();
+          } catch (err) {
+            // We want to account for errors caused by our own generation of
+            // and invalid PEM file
+            if (!/PEM_ASN1_read_bio/.test(err.message)) {
+              throw err;
+            }
+          }
         }
       }
     });

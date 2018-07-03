@@ -23,7 +23,8 @@ return_t VF_init() {
 //  - consider using ERR_get_error (iirc) to get actual error reasons
 //  - make sure we're correctly forcing FORMAT_PEM
 return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
-                   uint64_t document_l, char *pkcs7, uint64_t pkcs7_l) {
+                   uint64_t document_l, char *pkcs7, uint64_t pkcs7_l,
+                   struct Error **err) {
   // We want to clear the OpenSSL Error queue so that we know when we're in the
   // cleanup section, any errors we hit are the result of this invocation
   ERR_clear_error();
@@ -54,19 +55,19 @@ return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
   //
   p7 = PEM_read_bio_PKCS7(bio_pkcs7, NULL, NULL, NULL);
   if (p7 == NULL) {
-    rv = VF_FAIL;
+    rv = VF_EXCEPTION;
     goto end;
   }
 
   store = X509_STORE_new();
   if (store == NULL) {
-    rv = VF_FAIL;
+    rv = VF_EXCEPTION;
     goto end;
   }
 
   certs = sk_X509_new_null();
   if (certs == NULL) {
-    rv = VF_FAIL;
+    rv = VF_EXCEPTION;
     goto end;
   }
 
@@ -74,29 +75,57 @@ return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
   //   if (!PEM_read_bio_X509(bio_pubkey, &cert, 0, NULL)) {
   cert = PEM_read_bio_X509(bio_pubkey, NULL, NULL, NULL);
   if (cert == NULL) {
-    rv = VF_FAIL;
+    rv = VF_EXCEPTION;
     goto end;
   }
 
   if (0 == sk_X509_push(certs, cert)) {
-    rv = VF_FAIL;
+    rv = VF_EXCEPTION;
     goto end;
   }
 
   if (1 == PKCS7_verify(p7, certs, store, bio_document, NULL,
                         PKCS7_NOINTERN | PKCS7_NOVERIFY)) {
     rv = VF_SUCCESS;
+  } else {
+    rv = VF_FAIL;
   }
 
 end:
   if (!BIO_free(bio_document) || !BIO_free(bio_pubkey) ||
       !BIO_free(bio_pkcs7)) {
-    rv = VF_FAIL;
+    rv = VF_EXCEPTION;
   }
 
   PKCS7_free(p7);
   X509_STORE_free(store);
   sk_X509_free(certs);
   X509_free(cert);
+
+  struct Error *head = NULL;
+  // We're going to send back the last error message so that we can throw
+  // an exception, but only if we've got somewhere to put the error linked
+  // list
+  if (err && rv == VF_EXCEPTION) {
+    struct Error newError;
+
+    unsigned long errorNum;
+
+    do {
+      errorNum = ERR_get_error_line(&newError.file_string, &(newError.line));
+
+      if (!errorNum) {
+        break;
+      }
+
+      newError.reason_string = ERR_reason_error_string(errorNum);
+      newError.lib_string = ERR_lib_error_string(errorNum);
+      newError.func_string = ERR_func_error_string(errorNum);
+      newError.next = head;
+      head = &newError;
+    } while (errorNum);
+  }
+
+  *err = head;
   return rv;
 }

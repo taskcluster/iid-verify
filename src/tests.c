@@ -85,6 +85,7 @@ char *memdup(char *src, long len) {
 int main(void) {
   bio_out = BIO_new_fp(stdout, BIO_NOCLOSE);
   bio_err = BIO_new_fp(stderr, BIO_NOCLOSE);
+  struct Error *err;
 
   char *pubkey;
   long pubkey_l;
@@ -126,13 +127,14 @@ int main(void) {
   int pass = 0, tests = 0, outcome = VF_FAIL;
   ///////////////////////////////////////////////
   // Test a valid thing
-  outcome =
-      VF_verify(pubkey, pubkey_l, document, document_l, signature, signature_l);
+  err = NULL;
+  outcome = VF_verify(pubkey, pubkey_l, document, document_l, signature,
+                      signature_l, &err);
   tests++;
-  if (outcome == VF_SUCCESS) {
+  if (outcome == VF_SUCCESS && err == NULL) {
     pass++;
   } else {
-    fprintf(stderr, "FAIL: normal case");
+    fprintf(stderr, "FAIL: normal case\n");
   }
 
   int failed_iterations = 0;
@@ -143,9 +145,10 @@ int main(void) {
   gettimeofday(&start, NULL);
 
   for (int i = 0; i < iter; i++) {
+    err = NULL;
     outcome = VF_verify(pubkey, pubkey_l, document, document_l, signature,
-                        signature_l);
-    if (outcome != VF_SUCCESS) {
+                        signature_l, &err);
+    if (outcome != VF_SUCCESS || err != NULL) {
       failed_iterations++;
     }
   }
@@ -161,40 +164,44 @@ int main(void) {
   if (0 == failed_iterations) {
     pass++;
   } else {
-    fprintf(stderr, "FAIL: multiple iterations");
+    fprintf(stderr, "FAIL: multiple iterations\n");
   }
 
   ///////////////////////////////////////////////
   // Test an invalid document
+  err = NULL;
   outcome = VF_verify(pubkey, pubkey_l, invalid_document, document_l, signature,
-                      signature_l);
+                      signature_l, &err);
   tests++;
-  if (outcome == VF_FAIL) {
+  if (outcome == VF_FAIL && err == NULL) {
     pass++;
   } else {
-    fprintf(stderr, "FAIL: invalid document");
+    printf("%p\n", err);
+    fprintf(stderr, "FAIL: invalid document\n");
   }
 
   ///////////////////////////////////////////////
   // Test an invalid pubkey
+  err = NULL;
   outcome = VF_verify(invalid_pubkey, pubkey_l, document, document_l, signature,
-                      signature_l);
+                      signature_l, &err);
   tests++;
-  if (outcome == VF_FAIL) {
+  if (outcome == VF_EXCEPTION && err != NULL) {
     pass++;
   } else {
-    fprintf(stderr, "FAIL: invalid pubkey");
+    fprintf(stderr, "FAIL: invalid pubkey\n");
   }
 
   ///////////////////////////////////////////////
   // Test an invalid signature
+  err = NULL;
   outcome = VF_verify(pubkey, pubkey_l, document, document_l, invalid_signature,
-                      signature_l);
+                      signature_l, &err);
   tests++;
-  if (outcome == VF_FAIL) {
+  if (outcome == VF_EXCEPTION && err != NULL) {
     pass++;
   } else {
-    fprintf(stderr, "FAIL: invalid signature");
+    fprintf(stderr, "FAIL: invalid signature\n");
   }
 
   BIO_printf(bio_out, "%d tests run, %d passed\n", tests, pass);

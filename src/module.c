@@ -1,5 +1,6 @@
 #include "verify.h"
 #include <node_api.h>
+#include <stdio.h>
 
 napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
   napi_status status;
@@ -49,9 +50,21 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
                      "failed to get information about signature buffer");
   }
 
+  struct Error *err = NULL;
   return_t result;
-  result =
-      VF_verify(pubkey, pubkey_l, document, document_l, signature, signature_l);
+  result = VF_verify(pubkey, pubkey_l, document, document_l, signature,
+                     signature_l, &err);
+
+  // We should read all of these at some point, and maybe even
+  // give them all the information in the error nodes
+  if (err != NULL) {
+    char errMsg[256];
+    if (!snprintf(errMsg, 256, "%s@%d#%s: %s", err->file_string, err->line,
+                  err->func_string, err->reason_string)) {
+      napi_throw_error(env, NULL, "trying to create error string");
+    }
+    napi_throw_error(env, NULL, errMsg);
+  }
 
   napi_value outcome;
   status = napi_get_boolean(env, result == VF_SUCCESS, &outcome);
