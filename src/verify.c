@@ -31,18 +31,11 @@ VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
   BIO *bio_pkcs7 = BIO_new_mem_buf(pkcs7, pkcs7_l);
 
   // The data structures needed for verification
-  PKCS7 *p7;
+  PKCS7 *p7 = NULL;
   X509_STORE *store = NULL;
   STACK_OF(X509) *certs = NULL;
   X509 *cert = NULL;
 
-  // I'd prefer to pass an out parameter, but it seems that the second time
-  // that this function executes, we get a segfault in the underlying library.
-  // I'm not sure how best to debug this, but using the pointer returning
-  // option of the function works well
-  //
-  //   if(!PEM_read_bio_PKCS7(bio_pkcs7, &p7, NULL, NULL)) {
-  //
   p7 = PEM_read_bio_PKCS7(bio_pkcs7, NULL, NULL, NULL);
   if (p7 == NULL) {
     rv = VF_EXCEPTION;
@@ -61,8 +54,6 @@ VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
     goto end;
   }
 
-  // Same as reading the PKCS#7 file above
-  //   if (!PEM_read_bio_X509(bio_pubkey, &cert, 0, NULL)) {
   cert = PEM_read_bio_X509(bio_pubkey, NULL, NULL, NULL);
   if (cert == NULL) {
     rv = VF_EXCEPTION;
