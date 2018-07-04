@@ -8,7 +8,7 @@
 
 #include "./verify.h"
 
-return_t VF_init() {
+VF_return_t VF_init() {
   ERR_load_crypto_strings();
   OpenSSL_add_all_algorithms();
   // Since none of these functions return useful error messages, per the
@@ -22,13 +22,13 @@ return_t VF_init() {
 //  - make sure that all return values are correct read
 //  - consider using ERR_get_error (iirc) to get actual error reasons
 //  - make sure we're correctly forcing FORMAT_PEM
-return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
-                   uint64_t document_l, char *pkcs7, uint64_t pkcs7_l,
-                   struct Error **err) {
+VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
+                      uint64_t document_l, char *pkcs7, uint64_t pkcs7_l,
+                      struct Error **err) {
   // We want to clear the OpenSSL Error queue so that we know when we're in the
   // cleanup section, any errors we hit are the result of this invocation
   ERR_clear_error();
-  return_t rv;
+  VF_return_t rv;
 
   // First, we need to convert from C-strings into BIOs backed by memory
   BIO *bio_pubkey = BIO_new_mem_buf(pubkey, pubkey_l);
