@@ -30,11 +30,6 @@ VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
   BIO *bio_document = BIO_new_mem_buf(document, document_l);
   BIO *bio_pkcs7 = BIO_new_mem_buf(pkcs7, pkcs7_l);
 
-  // We don't want the BIO_close method here to free() the memory passed in
-  // BIO_set_close(bio_pubkey, BIO_NOCLOSE);
-  // BIO_set_close(bio_document, BIO_NOCLOSE);
-  // BIO_set_close(bio_pkcs7, BIO_NOCLOSE);
-
   // The data structures needed for verification
   PKCS7 *p7;
   X509_STORE *store = NULL;
