@@ -21,7 +21,7 @@ BIO *bio_out, *bio_err;
 
 // Returns the number of bytes read, and sets the contents ** to the start
 // of the memory buffer
-return_t read_complete_file(char *filename, char **value, long *length) {
+VF_return_t read_complete_file(char *filename, char **value, long *length) {
   FILE *f = fopen(filename, "r");
   if (!f) {
     perror("opening file");

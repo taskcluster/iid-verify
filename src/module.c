@@ -38,12 +38,15 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
   }
 
   struct Error *err = NULL;
-  return_t result;
+  VF_return_t result;
   result = VF_verify(pubkey, pubkey_l, document, document_l, signature,
                      signature_l, &err);
 
-  // We should read all of these at some point, and maybe even
-  // give them all the information in the error nodes
+  // All errors in a given thread's error queue are read into the linked list
+  // pointed at by err.  Currently, only the first error is read here and
+  // converted into a throwable JS Error.  In the future, all errors in the
+  // linked list ought to be read, stored in a list, that list attached to an
+  // Error and that error thrown with a useful error message.
   if (err != NULL) {
     char errMsg[256];
     if (!snprintf(errMsg, 256, "%s@%d#%s: %s", err->file_string, err->line,
@@ -67,7 +70,9 @@ napi_value init(napi_env env, napi_value exports) {
 
   // Our verification code requires us to initialise the OpenSSL library
   // which we're built against
-  VF_init();
+  if (VF_SUCCESS != VF_init()) {
+    napi_throw_error(env, NULL, "Unable to initialize OpenSSL library");
+  }
 
   napi_status status;
   napi_value fn;
