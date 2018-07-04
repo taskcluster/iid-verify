@@ -64,8 +64,5 @@ module.exports = function verify(pubkey, document, pkcs7) {
     ]);
   }
 
-  return addon.verify(
-    pubkey, pubkey.length,
-    document, document.length,
-    pkcs7, pkcs7.length);
+  return addon.verify(pubkey, document, pkcs7);
 };
