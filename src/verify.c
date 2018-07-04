@@ -17,11 +17,6 @@ VF_return_t VF_init() {
   return VF_SUCCESS;
 }
 
-// TODO:
-//  - make sure all cleanup happens all the time
-//  - make sure that all return values are correct read
-//  - consider using ERR_get_error (iirc) to get actual error reasons
-//  - make sure we're correctly forcing FORMAT_PEM
 VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
                       uint64_t document_l, char *pkcs7, uint64_t pkcs7_l,
                       struct Error **err) {
