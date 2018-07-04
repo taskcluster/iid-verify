@@ -42,9 +42,9 @@ module.exports = function verify(pubkey, document, pkcs7) {
     }
   }
 
-  // If the document has a header, we're going to assume that it's totally
-  // valid and ready to pass into the verification routines, if not, we'll
-  // trim any leading and trailing newlines so that the headers are valid
+  // If the pkcs7 signature has a header, we're going to assume that it's
+  // totally valid and ready to pass into the verification routines, if not,
+  // we'll trim any leading and trailing newlines so that the headers are valid
   if (!hasHeader) {
     while (pkcs7.length > 0 && pkcs7.indexOf(nl[0]) === 0) {
       pkcs7 = pkcs7.slice(1);
