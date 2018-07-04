@@ -65,6 +65,9 @@ VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
     goto end;
   }
 
+  // NOVERIFY is set to avoid validating the certificate chain for signing.
+  // Since the signatures this library is designed to verify will always be
+  // self-signed, the NOVERIFY option is required for the verification to work
   if (1 == PKCS7_verify(p7, certs, store, bio_document, NULL,
                         PKCS7_NOINTERN | PKCS7_NOVERIFY)) {
     rv = VF_SUCCESS;
