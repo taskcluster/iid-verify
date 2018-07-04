@@ -13,38 +13,25 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
   }
 
   // Get the buffer lengths
-  uint64_t pubkey_l;
-  uint64_t document_l;
-  uint64_t signature_l;
-  status = napi_get_value_int64(env, argv[1], (int64_t *)&pubkey_l);
-  if (status != napi_ok) {
-    napi_throw_error(env, NULL, "failed to read pubkey length");
-  }
-  status = napi_get_value_int64(env, argv[3], (int64_t *)&document_l);
-  if (status != napi_ok) {
-    napi_throw_error(env, NULL, "failed to read document length");
-  }
-  status = napi_get_value_int64(env, argv[5], (int64_t *)&signature_l);
-  if (status != napi_ok) {
-    napi_throw_error(env, NULL, "failed to read signature length");
-  }
+  size_t pubkey_l;
+  size_t document_l;
+  size_t signature_l;
 
   void *pubkey;
   void *document;
   void *signature;
 
-  status = napi_get_buffer_info(env, argv[0], &pubkey, (size_t *)&pubkey_l);
+  status = napi_get_buffer_info(env, argv[0], &pubkey, &pubkey_l);
   if (status != napi_ok) {
     napi_throw_error(env, NULL,
                      "failed to get information about pubkey buffer");
   }
-  status = napi_get_buffer_info(env, argv[2], &document, (size_t *)&document_l);
+  status = napi_get_buffer_info(env, argv[1], &document, &document_l);
   if (status != napi_ok) {
     napi_throw_error(env, NULL,
                      "failed to get information about document buffer");
   }
-  status =
-      napi_get_buffer_info(env, argv[4], &signature, (size_t *)&signature_l);
+  status = napi_get_buffer_info(env, argv[2], &signature, &signature_l);
   if (status != napi_ok) {
     napi_throw_error(env, NULL,
                      "failed to get information about signature buffer");
