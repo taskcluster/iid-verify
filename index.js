@@ -1,8 +1,8 @@
 const addon = require('bindings')('module');
 
-const pkcs7_header = Buffer.from('-----BEGIN PKCS7-----\n');
-const pkcs7_footer = Buffer.from('\n-----END PKCS7-----\n');
-const nl = '\n'.charAt(0);
+const pkcs7_header = Buffer.from('-----BEGIN PKCS7-----');
+const pkcs7_footer = Buffer.from('-----END PKCS7-----');
+const nl = Buffer.from('\n');
 
 /**
  * Verify a document given a public key, document and a PKCS#7 encoded
@@ -35,10 +35,10 @@ module.exports = function verify(pubkey, document, pkcs7) {
     pkcs7 = Buffer.from(pkcs7, 'utf-8');
   }
 
-  hasHeader = true;
-  for (let i = 0; i < pkcs7_header.length && hasHeader; i++) {
-    if (pkcs7[i] !== pkcs7_header[i]) {
-      hasHeader = false;
+  hasHeader = false;
+  if (pkcs7.length > pkcs7_header.length - 1) {
+    if (Buffer.compare(pkcs7_header, pkcs7.slice(0, pkcs7_header.length)) === 0) {
+      hasHeader = true;
     }
   }
 
@@ -46,18 +46,21 @@ module.exports = function verify(pubkey, document, pkcs7) {
   // valid and ready to pass into the verification routines, if not, we'll
   // trim any leading and trailing newlines so that the headers are valid
   if (!hasHeader) {
-    while (pkcs7.length > 0 && pkcs7.indexOf(nl) === 0) {
+    while (pkcs7.length > 0 && pkcs7.indexOf(nl[0]) === 0) {
       pkcs7 = pkcs7.slice(1);
     }
 
-    while (pkcs7.length > 0 && pkcs7.lastIndexOf(nl) === pkcs7.length - 1) {
+    while (pkcs7.length > 0 && pkcs7.lastIndexOf(nl[0]) === pkcs7.length - 1) {
       pkcs7 = pkcs7.slice(0, pkcs7.length - 1);
     }
 
     pkcs7 = Buffer.concat([
       pkcs7_header,
+      nl,
       pkcs7,
+      nl,
       pkcs7_footer,
+      nl,
     ]);
   }
 
