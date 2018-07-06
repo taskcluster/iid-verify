@@ -97,29 +97,29 @@ end:
   X509_free(cert);
 
   struct Error *head = NULL;
-  // We're going to send back the last error message so that we can throw
-  // an exception, but only if we've got somewhere to put the error linked
-  // list
+
+  // If there's an Error struct pointer (err) given to store an Error linked
+  // list, build a linked list of Error structs.
   if (err != NULL && rv == VF_EXCEPTION) {
 
     struct Error *newError = NULL;
     unsigned long errorNum = ERR_peek_error();
+    newError = malloc(sizeof(struct Error));
 
     if (!errorNum) {
-      newError->reason_string = "Unspecified exception in OpenSSL";
-      newError->lib_string = "<internal>";
-      newError->func_string = "<internal>";
+      newError->reason = "Unspecified exception in OpenSSL";
+      newError->lib = "<internal>";
+      newError->func = "<internal>";
       newError->next = head;
       newError->line = 0;
     } else {
       while (errorNum) {
-        newError = malloc(sizeof(struct Error));
-        newError->reason_string = ERR_reason_error_string(errorNum);
-        newError->lib_string = ERR_lib_error_string(errorNum);
-        newError->func_string = ERR_func_error_string(errorNum);
+        newError->reason = ERR_reason_error_string(errorNum);
+        newError->lib = ERR_lib_error_string(errorNum);
+        newError->func = ERR_func_error_string(errorNum);
         newError->next = head;
         errorNum =
-            ERR_get_error_line(&newError->file_string, &(newError->line));
+            ERR_get_error_line(&newError->file, &(newError->line));
       }
     }
     *err = head;

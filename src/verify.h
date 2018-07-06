@@ -10,10 +10,10 @@ typedef unsigned int VF_return_t;
 #define VF_EXCEPTION 2
 
 struct Error {
-  const char *reason_string;
-  const char *lib_string;
-  const char *func_string;
-  const char *file_string;
+  const char *reason;
+  const char *lib;
+  const char *func;
+  const char *file;
   int line;
   struct Error *next;
 };

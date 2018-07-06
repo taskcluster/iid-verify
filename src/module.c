@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define VF_DEBUG 1
+
 napi_status HandleError(napi_env env, struct Error *err) {
   if (err == NULL) {
     return napi_ok;
@@ -19,33 +21,58 @@ napi_status HandleError(napi_env env, struct Error *err) {
   if (status != napi_ok)
     return status;
 
+#ifdef VF_DEBUG
+  printf("created js array\n");
+#endif
+
   // We're going to create the error object so that the head of the err linked
   // list is the error object's message.  This *should* be the root error
-  status = napi_create_string_utf8(env, err->func_string, NAPI_AUTO_LENGTH,
+  status = napi_create_string_utf8(env, err->func, NAPI_AUTO_LENGTH,
                                    &errorString);
   if (status != napi_ok)
     return status;
+
+#ifdef VF_DEBUG
+  printf("created js string for Error.message: %s\n", err->func);
+#endif
+
   status = napi_create_error(env, NULL, errorString, &error);
   if (status != napi_ok)
     return status;
+
+#ifdef VF_DEBUG
+  printf("created js Error\n");
+#endif
 
   for (int i = 0; err != NULL; i++) {
     // Create the error string
 
     // First, create string to get size of req'd buffer
-    size = snprintf(NULL, 0, "%s %s:%d %s", err->lib_string, err->func_string,
-                    err->line, err->reason_string);
+    size = snprintf(NULL, 0, "%s %s:%d %s", err->lib, err->func,
+                    err->line, err->reason);
+
+#ifdef VF_DEBUG
+    printf("determined c string size for error %d: %d\n", i, size);
+#endif
 
     // Now allocate the memory
     msg = malloc(size + 1);
 
     // Now print for real
-    size = snprintf(msg, size, "%s %s:%d %s", err->lib_string, err->func_string,
-                    err->line, err->reason_string);
+    size = snprintf(msg, size, "%s %s:%d %s", err->lib, err->func,
+                    err->line, err->reason);
+
+#ifdef VF_DEBUG
+    printf("determined c string for error %d: %s\n", i, msg);
+#endif
 
     status = napi_create_string_utf8(env, msg, size - 1, &errorString);
     if (status != napi_ok)
       return status;
+
+#ifdef VF_DEBUG
+  printf("created js string for Error %d .message: %s\n", i, err->func);
+#endif
 
     free(msg);
 
@@ -62,8 +89,20 @@ napi_status HandleError(napi_env env, struct Error *err) {
   if (status != napi_ok)
     return status;
 
+#ifdef VF_DEBUG
+  printf("set js object property Error.errors\n");
+#endif
+
   VF_err_free(err);
-  return napi_throw(env, error);
+
+  status = napi_throw(env, error);
+  if (status != napi_ok)
+    return status;
+#ifdef VF_DEBUG
+  printf("threw js Error\n");
+#endif
+
+  return napi_ok;
 }
 
 napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
@@ -76,6 +115,10 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
   if (status != napi_ok) {
     napi_throw_error(env, NULL, "Failed to parse arguments");
   }
+
+#ifdef VF_DEBUG
+  printf("got js callback information\n");
+#endif
 
   // Get the buffer lengths
   size_t pubkey_l;
@@ -91,21 +134,39 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
     napi_throw_error(env, NULL,
                      "failed to get information about pubkey buffer");
   }
+
+#ifdef VF_DEBUG
+  printf("got js buffer information for pubkey\n");
+#endif
+
   status = napi_get_buffer_info(env, argv[1], &document, &document_l);
   if (status != napi_ok) {
     napi_throw_error(env, NULL,
                      "failed to get information about document buffer");
   }
+
+#ifdef VF_DEBUG
+  printf("got js buffer information for document\n");
+#endif
+
   status = napi_get_buffer_info(env, argv[2], &signature, &signature_l);
   if (status != napi_ok) {
     napi_throw_error(env, NULL,
                      "failed to get information about signature buffer");
   }
 
+#ifdef VF_DEBUG
+  printf("got js buffer information for signature\n");
+#endif
+
   struct Error *err = NULL;
   VF_return_t result;
   result = VF_verify(pubkey, pubkey_l, document, document_l, signature,
                      signature_l, &err);
+
+#ifdef VF_DEBUG
+  printf("ran VF_verify: %s\n", result ? "true" : "false");
+#endif
 
   switch (result) {
   case VF_FAIL:
@@ -114,32 +175,27 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
     if (status != napi_ok) {
       napi_throw_error(env, NULL, "error getting ref to boolean");
     }
+#ifdef VF_DEBUG
+    printf("got reference to js %s\n", result == VF_SUCCESS ? "true" : "false");
+#endif
     break;
   default:
     status = HandleError(env, err);
     if (status != napi_ok) {
       napi_throw_error(env, NULL, "error handling error (ha!)");
     }
-    break;
-  }
+#ifdef VF_DEBUG
+    printf("ran HandleError\n");
+#endif
 
-  // All errors in a given thread's error queue are read into the linked list
-  // pointed at by err.  Currently, only the first error is read here and
-  // converted into a throwable JS Error.  In the future, all errors in the
-  // linked list ought to be read, stored in a list, that list attached to an
-  // Error and that error thrown with a useful error message.
-  /*if (err != NULL) {
-    char errMsg[256];
-    if (!snprintf(errMsg, 256, "%s@%d#%s: %s", err->file_string, err->line,
-                  err->func_string, err->reason_string)) {
-      napi_throw_error(env, NULL, "trying to create error string");
+    status = napi_get_boolean(env, false, &outcome);
+    if (status != napi_ok) {
+      napi_throw_error(env, NULL, "error getting ref to boolean");
     }
-    napi_throw_error(env, NULL, errMsg);
-  }*/
-
-  status = napi_get_boolean(env, result == VF_SUCCESS, &outcome);
-  if (status != napi_ok) {
-    napi_throw_error(env, NULL, "Unable to create return value");
+#ifdef VF_DEBUG
+    printf("got reference to js false for exception\n");
+#endif
+    break;
   }
 
   return outcome;
