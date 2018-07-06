@@ -22,6 +22,13 @@ struct Error {
 // initialize the OpenSSL library for use in this program
 VF_return_t VF_init();
 
+// Calls to the VF_verify function which pass a non-NULL value for the Error
+// struct pointer pointer will allocate heap memory to store the structures in
+// the linked list.  This function must be called on the value with the Error
+// struct pointer used for the VF_verify call to ensure the allocated memory is
+// freed
+void VF_err_free(struct Error *err);
+
 // Verify an instance identity document.  The three required parts are the
 // public key, cleartext document and the signature in a PKCS#7 file.  The
 // PKCS#7 file must have the PEM headers already.  Each of these documents is

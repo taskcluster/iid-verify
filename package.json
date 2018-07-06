@@ -6,10 +6,10 @@
   "scripts": {
     "preinstall": "eslint --fix *.js && clang-format -i src/*.c src/*.h",
     "prepublish": "eslint --fix *.js && clang-format -i src/*.c src/*.h",
-    "pretest": "eslint --fix *.js && clang-format -i src/*.c src/*.h && node-gyp rebuild",
+    "pretest": "node-gyp rebuild",
     "other-tests": "make test",
     "test": "mocha",
-    "lint": "eslint --fix *.js"
+    "lint": "clang-format -i src/*.c src/*.h && eslint --fix *.js"
   },
   "enginesStrict": true,
   "engines": {

@@ -1,5 +1,9 @@
 BENCH_ITER=10
 
+.PHONY: clangfmt
+clangfmt:
+
+
 .PHONY: memtests
 memtests: src/verify.c src/tests.c
 	clang -g $? -o ./$@ -Wall -Werror -lcrypto -lefence -DEXTRA_DEBUG -DBENCH_ITER=$(BENCH_ITER)
