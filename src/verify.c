@@ -17,6 +17,16 @@ VF_return_t VF_init() {
   return VF_SUCCESS;
 }
 
+void VF_err_free(struct Error *err) {
+  struct Error *head = err;
+  struct Error *current = err;
+  while (head != NULL) {
+    current = head->next;
+    free(head);
+    head = current;
+  }
+}
+
 VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
                       uint64_t document_l, char *pkcs7, uint64_t pkcs7_l,
                       struct Error **err) {
@@ -90,26 +100,30 @@ end:
   // We're going to send back the last error message so that we can throw
   // an exception, but only if we've got somewhere to put the error linked
   // list
-  if (err && rv == VF_EXCEPTION) {
-    struct Error newError;
+  if (err != NULL && rv == VF_EXCEPTION) {
 
-    unsigned long errorNum;
+    struct Error *newError = NULL;
+    unsigned long errorNum = ERR_peek_error();
 
-    do {
-      errorNum = ERR_get_error_line(&newError.file_string, &(newError.line));
-
-      if (!errorNum) {
-        break;
+    if (!errorNum) {
+      newError->reason_string = "Unspecified exception in OpenSSL";
+      newError->lib_string = "<internal>";
+      newError->func_string = "<internal>";
+      newError->next = head;
+      newError->line = 0;
+    } else {
+      while (errorNum) {
+        newError = malloc(sizeof(struct Error));
+        newError->reason_string = ERR_reason_error_string(errorNum);
+        newError->lib_string = ERR_lib_error_string(errorNum);
+        newError->func_string = ERR_func_error_string(errorNum);
+        newError->next = head;
+        errorNum =
+            ERR_get_error_line(&newError->file_string, &(newError->line));
       }
-
-      newError.reason_string = ERR_reason_error_string(errorNum);
-      newError.lib_string = ERR_lib_error_string(errorNum);
-      newError.func_string = ERR_func_error_string(errorNum);
-      newError.next = head;
-      head = &newError;
-    } while (errorNum);
+    }
+    *err = head;
   }
 
-  *err = head;
   return rv;
 }
