@@ -4,9 +4,8 @@
     "node-gyp": "^3.7.0"
   },
   "scripts": {
-    "preinstall": "eslint --fix *.js && clang-format -i src/*.c src/*.h",
-    "prepublish": "eslint --fix *.js && clang-format -i src/*.c src/*.h",
-    "pretest": "node-gyp rebuild",
+    "prepublish": "eslint --fix *.js && clang-format -i src/*.c src/*.h && node-gyp clean",
+    "pretest": "node-gyp rebuild --debug",
     "other-tests": "make test",
     "test": "mocha",
     "lint": "clang-format -i src/*.c src/*.h && eslint --fix *.js"
