@@ -4,10 +4,10 @@
 
 // Store the return value of the code.  Like command line tools, a value >=1
 // will be a failure and == 0 will be success.
-typedef unsigned int VF_return_t;
+typedef int VF_return_t;
 #define VF_SUCCESS 0
 #define VF_FAIL 1
-#define VF_EXCEPTION 2
+#define VF_EXCEPTION -1
 
 // VF_DEBUG enables extra debugging information
 //#define VF_DEBUG 1
