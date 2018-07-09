@@ -99,7 +99,7 @@ VF_return_t read_complete_file(char *filename, uint8_t **value, long *length) {
 
   int read = fread(*value, 1, size, f);
 
-  if (!ferror(f) || read != size) {
+  if (!ferror(f) && read == size) {
     fclose(f);
     *length = size;
     return VF_SUCCESS;
