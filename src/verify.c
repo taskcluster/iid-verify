@@ -153,6 +153,15 @@ end:
     do {
       struct Error *new = malloc(sizeof(struct Error));
       errorNum = ERR_get_error_line(&new->file, &new->line);
+      // This break should *not* be needed because before this invocation, only
+      // the ERR_peek_error() function has been called at that point.  There
+      // shouldn't have been any removals from the error queue.  Sadly, this is
+      // not the case, since the call to ERR_get_error_line here returns a
+      // falsy value, which means that the error queue doesn't work as
+      // documented in the man page.
+      if (!errorNum) {
+        break;
+      }
       new->reason = ERR_reason_error_string(errorNum);
       new->lib = ERR_lib_error_string(errorNum);
       new->func = ERR_func_error_string(errorNum);
