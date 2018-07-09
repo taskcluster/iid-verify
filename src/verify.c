@@ -34,10 +34,18 @@ char *VF_err_fmt(struct Error *err) {
   size = snprintf(NULL, 0, "%s %s:%d %s", err->lib, err->func, err->line,
                   err->reason);
 
+  if (size < 0) {
+    return "ERROR DETERMINING LENGTH FOR ERROR STRING";
+  }
+
   msg = malloc(size + 1);
 
-  snprintf(msg, size + 1, "%s %s:%d %s", err->lib, err->func, err->line,
-           err->reason);
+  size = snprintf(msg, size + 1, "%s %s:%d %s", err->lib, err->func, err->line,
+                  err->reason);
+
+  if (size < 0) {
+    return "ERROR PRINTING ERROR STRING TO MEMORY";
+  }
 
   return msg;
 }
