@@ -88,14 +88,7 @@ napi_status HandleError(napi_env env, struct Error *err) {
 
   VF_err_free(err);
 
-  status = napi_throw(env, error);
-  if (status != napi_ok)
-    return status;
-#ifdef VF_DEBUG
-  printf("threw js Error\n");
-#endif
-
-  return napi_ok;
+  return napi_throw(env, error);
 }
 
 napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
@@ -188,6 +181,7 @@ napi_value init(napi_env env, napi_value exports) {
   // which we're built against
   if (VF_SUCCESS != VF_init()) {
     napi_throw_error(env, NULL, "Unable to initialize OpenSSL library");
+    return NULL;
   }
 
   napi_status status;
