@@ -191,11 +191,10 @@ int main(void) {
   // Empty things
   simple_test(&tests, &pass, &fail, VF_FAIL, pubkey, pubkey_l, empty_document,
               document_l, signature, signature_l, "Empty Document");
-  simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey, pubkey_l,
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey, 1,
               document, document_l, signature, signature_l, "Empty Pubkey");
   simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document,
-              document_l, empty_signature, signature_l, "Empty Signature");
-
+              document_l, empty_signature, 1, "Empty Signature");
 
   // These don't work as John Ford expects.  He thought that a certificate or
   // signature of zero length would cause OpenSSL to put an error in the error
@@ -205,11 +204,11 @@ int main(void) {
   // header) values here should be done inside the Javascript portion of this
   // library
   simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey_with_header,
-              strlen(empty_pubkey_with_header), document, document_l, signature,
+              strlen(empty_pubkey_with_header) + 1, document, document_l, signature,
               signature_l, "Empty Pubkey (with header)");
   simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document,
               document_l, empty_signature_with_header,
-              strlen(empty_signature_with_header),
+              strlen(empty_signature_with_header) + 1,
               "Empty Signature (with header)");
 
   ///////////////////////////////////////////////
