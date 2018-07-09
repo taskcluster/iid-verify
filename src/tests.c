@@ -82,7 +82,6 @@ VF_return_t read_complete_file(char *filename, char **value, long *length) {
   }
 
   long size = ftell(f);
-  *length = size;
 
   if (-1 == fseek(f, 0, SEEK_SET)) {
     perror("seeking to beginning of file");
@@ -101,6 +100,7 @@ VF_return_t read_complete_file(char *filename, char **value, long *length) {
 
   if (!ferror(f) || read != size) {
     fclose(f);
+    *length = size;
     return VF_SUCCESS;
   } else {
     perror("Reading file");
