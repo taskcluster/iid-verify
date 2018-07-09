@@ -51,3 +51,12 @@ you'll need to also run `yarn run other-tests`.
 
 The other tests include running with ElectricFence and Valgrind.  There should
 be no memory leaks from this library.
+
+You will need:
+
+  * clang
+  * clang-format
+  * valgrind
+  * electric-fence
+
+in order to run the full unit test suite

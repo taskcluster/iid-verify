@@ -100,12 +100,11 @@ VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
     // The last error in the error queue ought to be a "signature verification"
     // error as that's the last error to emit when a document validates to
     // invalid.  In order to determine whether to treat this as VF_FAIL or
-    // VF_EXCEPTION, we must first determine whether this error is a signature
-    // verification error or not.  If it is, we will mark this invocation of
-    // VF_verify as VF_FAIL, then clear the error queue so that if future
-    // errors occur, we can handle them as exceptions.  This also ensures that
-    // we're treating exceptions during verification differently to invalid
-    // signatures
+    // VF_EXCEPTION, first determine whether this error is a signature
+    // verification error or not.  If it is, mark this invocation of VF_verify
+    // as VF_FAIL, then clear the error queue so that if future errors occur,
+    // handle them as exceptions.  This also ensures that exceptions during
+    // verification are handled differently to invalid signatures
     unsigned long errorNum = ERR_peek_last_error();
 
     if (ERR_GET_LIB(errorNum) == ERR_LIB_PKCS7 &&
