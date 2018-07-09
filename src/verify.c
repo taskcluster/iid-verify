@@ -27,6 +27,21 @@ void VF_err_free(struct Error *err) {
   }
 }
 
+char *VF_err_fmt(struct Error *err) {
+  int size;
+  char *msg = NULL;
+
+  size = snprintf(NULL, 0, "%s %s:%d %s", err->lib, err->func, err->line,
+                  err->reason);
+
+  msg = malloc(size + 1);
+
+  snprintf(msg, size + 1, "%s %s:%d %s", err->lib, err->func, err->line,
+           err->reason);
+
+  return msg;
+}
+
 VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
                       uint64_t document_l, char *pkcs7, uint64_t pkcs7_l,
                       struct Error **err) {
@@ -82,7 +97,26 @@ VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
                         PKCS7_NOINTERN | PKCS7_NOVERIFY)) {
     rv = VF_SUCCESS;
   } else {
-    rv = VF_FAIL;
+    // The last error in the error queue ought to be a "signature verification"
+    // error as that's the last error to emit when a document validates to
+    // invalid.  In order to determine whether to treat this as VF_FAIL or
+    // VF_EXCEPTION, we must first determine whether this error is a signature
+    // verification error or not.  If it is, we will mark this invocation of
+    // VF_verify as VF_FAIL, then clear the error queue so that if future
+    // errors occur, we can handle them as exceptions.  This also ensures that
+    // we're treating exceptions during verification differently to invalid
+    // signatures
+    unsigned long errorNum = ERR_peek_last_error();
+
+    if (ERR_GET_LIB(errorNum) == ERR_LIB_PKCS7 &&
+        ERR_GET_FUNC(errorNum) == PKCS7_F_PKCS7_VERIFY &&
+        ERR_GET_REASON(errorNum) == PKCS7_R_SIGNATURE_FAILURE) {
+      ERR_clear_error();
+      rv = VF_FAIL;
+    } else {
+      rv = VF_EXCEPTION;
+    }
+
   }
 
 end:
@@ -98,30 +132,33 @@ end:
 
   struct Error *head = NULL;
 
-  // If there's an Error struct pointer (err) given to store an Error linked
-  // list, build a linked list of Error structs.
-  if (err != NULL && rv == VF_EXCEPTION) {
+  unsigned long errorNum = ERR_peek_error();
 
-    struct Error *newError = NULL;
-    unsigned long errorNum = ERR_peek_error();
-    newError = malloc(sizeof(struct Error));
-
-    if (!errorNum) {
-      newError->reason = "Unspecified exception in OpenSSL";
-      newError->lib = "<internal>";
-      newError->func = "<internal>";
-      newError->next = head;
-      newError->line = 0;
-    } else {
-      while (errorNum) {
-        newError->reason = ERR_reason_error_string(errorNum);
-        newError->lib = ERR_lib_error_string(errorNum);
-        newError->func = ERR_func_error_string(errorNum);
-        newError->next = head;
-        errorNum =
-            ERR_get_error_line(&newError->file, &(newError->line));
-      }
-    }
+  if (!errorNum && rv == VF_EXCEPTION) {
+    // This case is for there being an exception signaled in this file but
+    // there isn't a corresponding error in the OpenSSL error queue.  Ideally,
+    // we'd use ERR_put_error to insert error messages which we could use to
+    // display using a single error reporting system.
+    head = malloc(sizeof(struct Error));
+    head->reason = "IID-Verify Exception";
+    head->lib = __FILE__;
+    head->func = "VF_verify";
+    head->next = NULL;
+    head->line = __LINE__;
+    *err = head;
+  } else if (errorNum && err == NULL) {
+    rv = VF_EXCEPTION;
+  } else if (errorNum && err != NULL) {
+    rv = VF_EXCEPTION;
+    do {
+      struct Error *new = malloc(sizeof(struct Error));
+      errorNum = ERR_get_error_line(&new->file, &new->line);
+      new->reason = ERR_reason_error_string(errorNum);
+      new->lib = ERR_lib_error_string(errorNum);
+      new->func = ERR_func_error_string(errorNum);
+      new->next = head;
+      head = new;
+    } while (errorNum);
     *err = head;
   }
 

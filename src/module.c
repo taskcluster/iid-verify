@@ -3,16 +3,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+//#define VF_DEBUG 1
+
 napi_status HandleError(napi_env env, struct Error *err) {
-  if (err == NULL) {
-    return napi_ok;
-  }
   napi_status status;
   napi_value error;       // The js Error object
   napi_value errors;      // The js list of error strings
   napi_value errorString; // Used to build the list of strings
-  int size;               // used to build strings
-  char *msg = NULL;       // used to build strings
+
+  char *msg = NULL; // used to build strings
+
+  if (err == NULL) {
+    status =
+        napi_throw_error(env, NULL, "Unknown exception verifying document");
+    return status;
+  }
 
   // Create an array for all of the error strings
   status = napi_create_array(env, &errors);
@@ -25,15 +30,16 @@ napi_status HandleError(napi_env env, struct Error *err) {
 
   // We're going to create the error object so that the head of the err linked
   // list is the error object's message.  This *should* be the root error
-  status = napi_create_string_utf8(env, err->func, NAPI_AUTO_LENGTH,
-                                   &errorString);
+  msg = VF_err_fmt(err);
+  status = napi_create_string_utf8(env, msg, NAPI_AUTO_LENGTH, &errorString);
+#ifdef VF_DEBUG
+  printf("created js string for Error.message: %s\n", msg);
+#endif
+  free(msg);
+  msg = NULL;
 
   if (status != napi_ok)
     return status;
-
-#ifdef VF_DEBUG
-  printf("created js string for Error.message: %s\n", err->func);
-#endif
 
   status = napi_create_error(env, NULL, errorString, &error);
   if (status != napi_ok)
@@ -43,42 +49,32 @@ napi_status HandleError(napi_env env, struct Error *err) {
   printf("created js Error\n");
 #endif
 
-  for (int i = 0; err != NULL; i++) {
-    // First, create string to get size of req'd buffer
-    size = snprintf(NULL, 0, "%s %s:%d %s", err->lib, err->func,
-                    err->line, err->reason);
-
-#ifdef VF_DEBUG
-    printf("determined c string size for error %d: %d\n", i, size);
-#endif
-
+  // We're limiting to the first 1000 so that we don't
+  // cause an infinite loop
+  int i = 0;
+  while (err != NULL) {
+    i++;
+    if (i > 10) {
+      break;
+    }
     // Now allocate the memory
-    msg = malloc(size + 1);
+    msg = VF_err_fmt(err);
 
-    // Now print for real
-    size = snprintf(msg, size, "%s %s:%d %s", err->lib, err->func,
-                    err->line, err->reason);
-
-#ifdef VF_DEBUG
-    printf("determined c string for error %d: %s\n", i, msg);
-#endif
-
-    status = napi_create_string_utf8(env, msg, size - 1, &errorString);
+    status = napi_create_string_utf8(env, msg, NAPI_AUTO_LENGTH, &errorString);
     if (status != napi_ok)
       return status;
 
 #ifdef VF_DEBUG
-  printf("created js string for Error %d .message: %s\n", i, err->func);
+    printf("created js string for error string %d: %s\n", i, msg);
 #endif
 
     free(msg);
+    msg = NULL;
 
     // Insert the error string into the errors array
     status = napi_set_element(env, errors, i, errorString);
     if (status != napi_ok)
       return status;
-
-    // Now, move to the next error;
     err = err->next;
   }
 
@@ -103,7 +99,7 @@ napi_status HandleError(napi_env env, struct Error *err) {
 }
 
 napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
-  napi_value outcome;
+  napi_value outcome = NULL;
   napi_status status;
   size_t argc = 3;
   napi_value argv[argc];
@@ -159,37 +155,27 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
                      signature_l, &err);
 
 #ifdef VF_DEBUG
-  printf("ran VF_verify: %s\n", result ? "true" : "false");
+  printf("VF_verify is success: %s\n", result == VF_SUCCESS ? "true" : "false");
+  printf("VF_verify is exception: %s\n",
+         result == VF_EXCEPTION ? "true" : "false");
 #endif
 
-  switch (result) {
-  case VF_FAIL:
-  case VF_SUCCESS:
-    status = napi_get_boolean(env, result == VF_SUCCESS, &outcome);
-    if (status != napi_ok) {
-      napi_throw_error(env, NULL, "error getting ref to boolean");
-    }
-#ifdef VF_DEBUG
-    printf("got reference to js %s\n", result == VF_SUCCESS ? "true" : "false");
-#endif
-    break;
-  default:
+  if (result == VF_EXCEPTION) {
     status = HandleError(env, err);
     if (status != napi_ok) {
       return NULL;
     }
 #ifdef VF_DEBUG
-    printf("ran HandleError\n");
+    printf("ran HandleError because of exception\n");
 #endif
-
-    status = napi_get_boolean(env, false, &outcome);
+  } else {
+    status = napi_get_boolean(env, result == VF_SUCCESS, &outcome);
     if (status != napi_ok) {
       return NULL;
     }
 #ifdef VF_DEBUG
-    printf("got reference to js false for exception\n");
+    printf("got reference to js %s\n", result == VF_SUCCESS ? "true" : "false");
 #endif
-    break;
   }
 
   return outcome;

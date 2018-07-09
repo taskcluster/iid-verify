@@ -9,7 +9,6 @@ typedef unsigned int VF_return_t;
 #define VF_FAIL 1
 #define VF_EXCEPTION 2
 
-
 // VF_DEBUG enables extra debugging information
 //#define VF_DEBUG 1
 
@@ -32,6 +31,11 @@ VF_return_t VF_init();
 // struct pointer used for the VF_verify call to ensure the allocated memory is
 // freed
 void VF_err_free(struct Error *err);
+
+// Return a string which represents an Error for human display.  This function
+// allocates memory which the caller is responsible for calling free() on.
+// This function does not do any linked list traversal.
+char *VF_err_fmt(struct Error *err);
 
 // Verify an instance identity document.  The three required parts are the
 // public key, cleartext document and the signature in a PKCS#7 file.  The
