@@ -1,4 +1,4 @@
-const addon = require('bindings')('module');
+const addon = require('bindings')('glue');
 
 const pkcs7_header = Buffer.from('-----BEGIN PKCS7-----');
 const pkcs7_footer = Buffer.from('-----END PKCS7-----');

@@ -8,7 +8,7 @@
   },
   'targets': [
     {
-      'target_name': 'module',
+      'target_name': 'glue',
       'cflags': [
         '-std=c99',
         '-Wall',
@@ -18,7 +18,7 @@
         '-lcrypto'
       ],
       'sources': [
-        'src/module.c',
+        'src/glue.c',
         'src/verify.c',
         'src/verify.h'
       ],

@@ -24,3 +24,4 @@ format:
 
 .PHONY: test
 test: format memtests ctests shell-tests
+	@echo These unit tests passed

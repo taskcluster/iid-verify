@@ -191,8 +191,8 @@ int main(void) {
   // Empty things
   simple_test(&tests, &pass, &fail, VF_FAIL, pubkey, pubkey_l, empty_document,
               document_l, signature, signature_l, "Empty Document");
-  simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey, 1,
-              document, document_l, signature, signature_l, "Empty Pubkey");
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey, 1, document,
+              document_l, signature, signature_l, "Empty Pubkey");
   simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document,
               document_l, empty_signature, 1, "Empty Signature");
 
@@ -204,8 +204,8 @@ int main(void) {
   // header) values here should be done inside the Javascript portion of this
   // library
   simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey_with_header,
-              strlen(empty_pubkey_with_header) + 1, document, document_l, signature,
-              signature_l, "Empty Pubkey (with header)");
+              strlen(empty_pubkey_with_header) + 1, document, document_l,
+              signature, signature_l, "Empty Pubkey (with header)");
   simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document,
               document_l, empty_signature_with_header,
               strlen(empty_signature_with_header) + 1,
