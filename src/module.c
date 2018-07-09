@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define VF_DEBUG 1
-
 napi_status HandleError(napi_env env, struct Error *err) {
   if (err == NULL) {
     return napi_ok;
@@ -29,6 +27,7 @@ napi_status HandleError(napi_env env, struct Error *err) {
   // list is the error object's message.  This *should* be the root error
   status = napi_create_string_utf8(env, err->func, NAPI_AUTO_LENGTH,
                                    &errorString);
+
   if (status != napi_ok)
     return status;
 
@@ -45,8 +44,6 @@ napi_status HandleError(napi_env env, struct Error *err) {
 #endif
 
   for (int i = 0; err != NULL; i++) {
-    // Create the error string
-
     // First, create string to get size of req'd buffer
     size = snprintf(NULL, 0, "%s %s:%d %s", err->lib, err->func,
                     err->line, err->reason);
@@ -108,12 +105,12 @@ napi_status HandleError(napi_env env, struct Error *err) {
 napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
   napi_value outcome;
   napi_status status;
-  size_t argc = 6;
+  size_t argc = 3;
   napi_value argv[argc];
   status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
 
   if (status != napi_ok) {
-    napi_throw_error(env, NULL, "Failed to parse arguments");
+    return NULL;
   }
 
 #ifdef VF_DEBUG
@@ -131,8 +128,7 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
 
   status = napi_get_buffer_info(env, argv[0], &pubkey, &pubkey_l);
   if (status != napi_ok) {
-    napi_throw_error(env, NULL,
-                     "failed to get information about pubkey buffer");
+    return NULL;
   }
 
 #ifdef VF_DEBUG
@@ -141,8 +137,7 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
 
   status = napi_get_buffer_info(env, argv[1], &document, &document_l);
   if (status != napi_ok) {
-    napi_throw_error(env, NULL,
-                     "failed to get information about document buffer");
+    return NULL;
   }
 
 #ifdef VF_DEBUG
@@ -151,8 +146,7 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
 
   status = napi_get_buffer_info(env, argv[2], &signature, &signature_l);
   if (status != napi_ok) {
-    napi_throw_error(env, NULL,
-                     "failed to get information about signature buffer");
+    return NULL;
   }
 
 #ifdef VF_DEBUG
@@ -182,7 +176,7 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
   default:
     status = HandleError(env, err);
     if (status != napi_ok) {
-      napi_throw_error(env, NULL, "error handling error (ha!)");
+      return NULL;
     }
 #ifdef VF_DEBUG
     printf("ran HandleError\n");
@@ -190,7 +184,7 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
 
     status = napi_get_boolean(env, false, &outcome);
     if (status != napi_ok) {
-      napi_throw_error(env, NULL, "error getting ref to boolean");
+      return NULL;
     }
 #ifdef VF_DEBUG
     printf("got reference to js false for exception\n");
@@ -215,12 +209,12 @@ napi_value init(napi_env env, napi_value exports) {
 
   status = napi_create_function(env, NULL, 0, Call_VF_verify, NULL, &fn);
   if (status != napi_ok) {
-    napi_throw_error(env, NULL, "Unable to create function");
+    return NULL;
   }
 
   status = napi_set_named_property(env, exports, "verify", fn);
   if (status != napi_ok) {
-    napi_throw_error(env, NULL, "Unable to populate exports");
+    return NULL;
   }
 
   return exports;
