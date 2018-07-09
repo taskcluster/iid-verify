@@ -69,7 +69,8 @@ void simple_test(int *tests, int *pass, int *fail, VF_return_t expected,
   VF_err_free(err);
 }
 
-VF_return_t read_complete_file(char *filename, uint8_t **value, long *length) {
+VF_return_t read_complete_file(char *filename, uint8_t **value,
+                               size_t *length) {
   FILE *f = fopen(filename, "r");
   if (!f) {
     perror("opening file");
@@ -123,7 +124,7 @@ int main(void) {
   struct Error *err = NULL;
 
   uint8_t *pubkey = NULL;
-  long pubkey_l;
+  size_t pubkey_l;
   if (VF_FAIL ==
       read_complete_file("./test-files/rsa2048-pubkey", &pubkey, &pubkey_l)) {
     fprintf(stderr, "failed to read rsa2048 public key file\n");
@@ -131,7 +132,7 @@ int main(void) {
   }
 
   uint8_t *document = NULL;
-  long document_l;
+  size_t document_l;
   if (VF_FAIL ==
       read_complete_file("./test-files/document", &document, &document_l)) {
     fprintf(stderr, "failed to read clear text document\n");
@@ -139,7 +140,7 @@ int main(void) {
   }
 
   uint8_t *signature = NULL;
-  long signature_l;
+  size_t signature_l;
   // Note that there is a special version of the RSA2048 PKCS#7 document that
   // has the headers added to it.  This is something that Amazon does not
   // provide, but doing that check is significantly easier from the JS part of
@@ -154,7 +155,7 @@ int main(void) {
   incorrect_document[20] ^= 1;
 
   uint8_t *invalid_structure = NULL;
-  long invalid_structure_l;
+  size_t invalid_structure_l;
   if (VF_FAIL == read_complete_file("./test-files/not-valid-datastructure",
                                     &invalid_structure, &invalid_structure_l)) {
     fprintf(stderr, "failed to read invalid data signature\n");
