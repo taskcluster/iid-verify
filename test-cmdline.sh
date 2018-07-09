@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This test script is used to validate that the files that are used in the C/JS
+# unit tests for valid test cases are actually valid.
+
 set -e
 
 rm -rf .cmdline-test
@@ -19,8 +22,7 @@ openssl smime -verify -in real-pkcs7 -inform PEM -content document -certfile pkc
 if [ $? -eq 0 ] ; then echo PKCS7 file validates ;  else echo PKCS7 Failed ; exit 1 ; fi
 
 # Test the rsa2048 endpoint
-#openssl smime -verify -in real-rsa2048 -inform PEM -content document -certfile rsa2048-pubkey -noverify > /dev/null
-valgrind --leak-check=full openssl smime -verify -in real-rsa2048 -inform PEM -content document -certfile rsa2048-pubkey -noverify
+openssl smime -verify -in real-rsa2048 -inform PEM -content document -certfile rsa2048-pubkey -noverify > /dev/null
 if [ $? -eq 0 ] ; then echo RSA2048 file validates ; else echo RSA2048 Failed ; exit 1 ; fi
 
 # Benchmark RSA2048
