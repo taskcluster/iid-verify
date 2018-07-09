@@ -11,7 +11,7 @@ memtests: src/verify.c src/tests.c
 
 .PHONY: ctests
 ctests: src/verify.c src/tests.c
-	clang -g $? -o ./$@ -Wall -Werror -lcrypto -DEXTRA_DEBUG -DBENCH_ITER=100000
+	clang -g $? -o ./$@ -Wall -Werror -lcrypto -DEXTRA_DEBUG -DBENCH_ITER=1000
 	./$@
 
 .PHONY: shell-tests

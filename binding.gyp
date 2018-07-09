@@ -10,6 +10,7 @@
     {
       'target_name': 'module',
       'cflags': [
+        '-std=c99',
         '-Wall',
         '-Werror'
       ],
