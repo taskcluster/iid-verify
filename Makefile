@@ -7,7 +7,7 @@ clangfmt:
 .PHONY: memtests
 memtests: src/verify.c src/tests.c
 	clang -g $? -o ./$@ -Wall -Werror -lcrypto -lefence -DEXTRA_DEBUG -DBENCH_ITER=$(BENCH_ITER)
-	valgrind --leak-check=full ./$@
+	valgrind --read-var-info=yes --track-origins=yes --leak-check=full ./$@
 
 .PHONY: ctests
 ctests: src/verify.c src/tests.c
