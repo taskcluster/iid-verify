@@ -136,7 +136,7 @@ int main(void) {
 
   char *signature = NULL;
   long signature_l;
-  // Note that we have a special version of the RSA2048 PKCS#7 document that
+  // Note that there is a special version of the RSA2048 PKCS#7 document that
   // has the headers added to it.  This is something that Amazon does not
   // provide, but doing that check is significantly easier from the JS part of
   // this library

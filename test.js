@@ -122,13 +122,6 @@ describe('verify', () => {
       for (let i = 0; i < document.length; i++) {
         for (let j = 0; j < 8; j++) {
           let badDoc = Buffer.from(document);
-          /*console.log([
-            'Byte ', i,
-            'Bit ', j,
-            parseInt(badDoc[i], 10).toString(2),
-            ' -> ',
-            parseInt(badDoc[i] ^ (1 << j), 10).toString(2),
-          ].join(' '))*/
           badDoc[i] ^= 1 << j;
           assume(subject(pubkey, badDoc, pkcs7_with_header)).is.not.ok();
         }
@@ -137,7 +130,7 @@ describe('verify', () => {
 
     // We're going to flip some bits here.  We're only going to try to flip the
     // bits that relate to the cryptographic calculations.  We don't flip all
-    // bits for this document since we're not doing signature file validation
+    // bits for this public key since we're not doing signature file validation
     // because of a self-signed certificate being used (i.g. -noverify)
     it('should fail for bitflips on public key data', () => {
       let pubkeydata = Buffer.from(pubkey).toString('ascii');
@@ -162,14 +155,14 @@ describe('verify', () => {
 
     // We're going to flip some bits here.  We're only going to try to flip the
     // bits that relate to the cryptographic calculations.  We don't flip all
-    // bits for this document since we're not doing signature file validation
+    // bits for this signature since we're not doing signature file validation
     // because of a self-signed certificate being used (i.g. -noverify)
     it('should fail for bitflips on signature data', () => {
       let x = new Array();
       let sigdata = Buffer.from(pkcs7).toString('ascii');
       sigdata = Buffer.from(sigdata, 'base64');
 
-      // I got the values here by using an ASN.1 decoder to find the
+      // The values here are obtained by using an ASN.1 decoder to find the
       // cryptograpic parts of the signature to alter https://lapo.it/asn1js
       const mdStart = 737 + 2; // 737 is offset, 2 is header size
       const mdEnd = mdStart + 32; // 32 is the size of the messageDigest
