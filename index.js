@@ -47,10 +47,10 @@ module.exports = function verify(pubkey, document, pkcs7) {
   // trailing newlines so that the headers are valid
   if (!hasHeader) {
     let i;
-    for (i = 0; i < pkcs7.length && pkcs7[i] === nl[0]; i++);
+    for (i = 0; i < pkcs7.length && pkcs7[i] === nl[0]; i++) {;}
     pkcs7 = pkcs7.slice(i);
 
-    for (i = pkcs7.length - 1; i >= 0 && pkcs7[i] === nl[0]; i--);
+    for (i = pkcs7.length - 1; i >= 0 && pkcs7[i] === nl[0]; i--) {;}
     pkcs7 = pkcs7.slice(0, i+1);
 
     pkcs7 = Buffer.concat([
