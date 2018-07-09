@@ -15,6 +15,7 @@ ctests: src/verify.c src/tests.c
 	./$@
 
 .PHONY: shell-tests
+shell-tests:
 	./test-cmdline.sh
 
 .PHONY: format

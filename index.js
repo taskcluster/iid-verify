@@ -46,13 +46,12 @@ module.exports = function verify(pubkey, document, pkcs7) {
   // ready to pass into the verification routines, if not, trim any leading and
   // trailing newlines so that the headers are valid
   if (!hasHeader) {
-    while (pkcs7.length > 0 && pkcs7.indexOf(nl[0]) === 0) {
-      pkcs7 = pkcs7.slice(1);
-    }
+    let i;
+    for (i = 0; i < pkcs7.length && pkcs7[i] === nl[0]; i++);
+    pkcs7 = pkcs7.slice(i);
 
-    while (pkcs7.length > 0 && pkcs7.lastIndexOf(nl[0]) === pkcs7.length - 1) {
-      pkcs7 = pkcs7.slice(0, pkcs7.length - 1);
-    }
+    for (i = pkcs7.length - 1; i >= 0 && pkcs7[i] === nl[0]; i--);
+    pkcs7 = pkcs7.slice(0, i+1);
 
     pkcs7 = Buffer.concat([
       pkcs7_header,
