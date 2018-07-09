@@ -10,8 +10,8 @@
 #endif
 
 void simple_test(int *tests, int *pass, int *fail, VF_return_t expected,
-                 char *pubkey, int pubkey_l, char *document, int document_l,
-                 char *signature, int signature_l, char *msg) {
+                 uint8_t *pubkey, int pubkey_l, uint8_t *document, int document_l,
+                 uint8_t *signature, int signature_l, char *msg) {
 
   struct timeval start;
   struct timeval end;
@@ -68,7 +68,7 @@ void simple_test(int *tests, int *pass, int *fail, VF_return_t expected,
   VF_err_free(err);
 }
 
-VF_return_t read_complete_file(char *filename, char **value, long *length) {
+VF_return_t read_complete_file(char *filename, uint8_t **value, long *length) {
   FILE *f = fopen(filename, "r");
   if (!f) {
     perror("opening file");
@@ -109,8 +109,8 @@ VF_return_t read_complete_file(char *filename, char **value, long *length) {
   }
 }
 
-char *memdup(char *src, long len) {
-  char *x = malloc(len);
+uint8_t *memdup(uint8_t *src, long len) {
+  uint8_t *x = malloc(len);
   memcpy(x, src, len);
   return x;
 }
@@ -118,7 +118,7 @@ char *memdup(char *src, long len) {
 int main(void) {
   struct Error *err = NULL;
 
-  char *pubkey = NULL;
+  uint8_t *pubkey = NULL;
   long pubkey_l;
   if (VF_FAIL ==
       read_complete_file("./test-files/rsa2048-pubkey", &pubkey, &pubkey_l)) {
@@ -126,7 +126,7 @@ int main(void) {
     exit(1);
   }
 
-  char *document = NULL;
+  uint8_t *document = NULL;
   long document_l;
   if (VF_FAIL ==
       read_complete_file("./test-files/document", &document, &document_l)) {
@@ -134,7 +134,7 @@ int main(void) {
     exit(1);
   }
 
-  char *signature = NULL;
+  uint8_t *signature = NULL;
   long signature_l;
   // Note that there is a special version of the RSA2048 PKCS#7 document that
   // has the headers added to it.  This is something that Amazon does not
@@ -146,11 +146,10 @@ int main(void) {
     exit(1);
   }
 
-  char *incorrect_document = memdup(document, document_l);
+  uint8_t *incorrect_document = memdup(document, document_l);
   incorrect_document[20] ^= 1;
 
-  // char *invalid_pubkey = memdup(pubkey, pubkey_l);
-  char *invalid_structure = NULL;
+  uint8_t *invalid_structure = NULL;
   long invalid_structure_l;
   if (VF_FAIL == read_complete_file("./test-files/not-valid-datastructure",
                                     &invalid_structure, &invalid_structure_l)) {
@@ -158,14 +157,14 @@ int main(void) {
     exit(1);
   }
 
-  char *empty_pubkey = "";
-  char *empty_document = "";
-  char *empty_signature = "";
+  uint8_t *empty_pubkey = (uint8_t*) "";
+  uint8_t *empty_document = (uint8_t*) "";
+  uint8_t *empty_signature = (uint8_t*) "";
 
-  char *empty_pubkey_with_header =
-      "-----BEGIN CERTIFICATE-----\n\n-----END CERTIFICATE-----\n";
-  char *empty_signature_with_header =
-      "-----BEGIN PKCS7-----\n\n-----END PKCS7-----\n";
+  uint8_t *empty_pubkey_with_header =
+      (uint8_t*) "-----BEGIN CERTIFICATE-----\n\n-----END CERTIFICATE-----\n";
+  uint8_t *empty_signature_with_header =
+      (uint8_t*) "-----BEGIN PKCS7-----\n\n-----END PKCS7-----\n";
 
   VF_init();
 
@@ -204,11 +203,11 @@ int main(void) {
   // header) values here should be done inside the Javascript portion of this
   // library
   simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey_with_header,
-              strlen(empty_pubkey_with_header) + 1, document, document_l,
+              strlen((char*)empty_pubkey_with_header) + 1, document, document_l,
               signature, signature_l, "Empty Pubkey (with header)");
   simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document,
               document_l, empty_signature_with_header,
-              strlen(empty_signature_with_header) + 1,
+              strlen((char*)empty_signature_with_header) + 1,
               "Empty Signature (with header)");
 
   ///////////////////////////////////////////////

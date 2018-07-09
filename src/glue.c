@@ -118,11 +118,11 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
   size_t document_l;
   size_t signature_l;
 
-  void *pubkey;
-  void *document;
-  void *signature;
+  uint8_t *pubkey;
+  uint8_t *document;
+  uint8_t *signature;
 
-  status = napi_get_buffer_info(env, argv[0], &pubkey, &pubkey_l);
+  status = napi_get_buffer_info(env, argv[0], (void*) &pubkey, &pubkey_l);
   if (status != napi_ok) {
     return NULL;
   }
@@ -131,7 +131,7 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
   printf("got js buffer information for pubkey\n");
 #endif
 
-  status = napi_get_buffer_info(env, argv[1], &document, &document_l);
+  status = napi_get_buffer_info(env, argv[1], (void*) &document, &document_l);
   if (status != napi_ok) {
     return NULL;
   }
@@ -140,7 +140,7 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
   printf("got js buffer information for document\n");
 #endif
 
-  status = napi_get_buffer_info(env, argv[2], &signature, &signature_l);
+  status = napi_get_buffer_info(env, argv[2], (void*) &signature, &signature_l);
   if (status != napi_ok) {
     return NULL;
   }

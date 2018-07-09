@@ -46,8 +46,8 @@ char *VF_err_fmt(struct Error *err);
 // in the **errors list, along with the number of errors in the errors_n
 // parameter.  This memory is allocated in the VF_verify function but is owned
 // by the caller, which is responsible for freeing it
-VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
-                      uint64_t document_l, char *pkcs7, uint64_t pkcs7_l,
+VF_return_t VF_verify(uint8_t *pubkey, uint64_t pubkey_l, uint8_t *document,
+                      uint64_t document_l, uint8_t *pkcs7, uint64_t pkcs7_l,
                       struct Error **err);
 
 #endif
