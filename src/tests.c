@@ -9,9 +9,9 @@
 #define BENCH_ITER 100
 #endif
 
-void simple_test(int *tests, int *pass, int *fail, VF_return_t expected, char*
-    pubkey, int pubkey_l, char* document, int document_l, char* signature, int
-    signature_l, char* msg) {
+void simple_test(int *tests, int *pass, int *fail, VF_return_t expected,
+                 char *pubkey, int pubkey_l, char *document, int document_l,
+                 char *signature, int signature_l, char *msg) {
 
   struct timeval start;
   struct timeval end;
@@ -20,8 +20,8 @@ void simple_test(int *tests, int *pass, int *fail, VF_return_t expected, char*
 
   gettimeofday(&start, NULL);
 
-  VF_return_t outcome = VF_verify(pubkey, pubkey_l, document, document_l, signature,
-      signature_l, &err);
+  VF_return_t outcome = VF_verify(pubkey, pubkey_l, document, document_l,
+                                  signature, signature_l, &err);
 
   gettimeofday(&end, NULL);
 
@@ -33,26 +33,41 @@ void simple_test(int *tests, int *pass, int *fail, VF_return_t expected, char*
   *tests += 1;
 
   if (outcome == expected) {
-    if (expected == VF_EXCEPTION && err != NULL) {
+    if (expected == VF_EXCEPTION && err == NULL) {
       *fail += 1;
-      printf("FAIL: expected exception, received none: %s\n", msg);
+      printf("FAIL: got expected outcome but expected exception and received "
+             "none: %s\n",
+             msg);
     } else if (expected != VF_EXCEPTION && err != NULL) {
       *fail += 1;
-      printf("FAIL: did not expect exception, received one: %s\n", msg);
+      printf("FAIL: got expected outcome but did not expect exception and "
+             "received one: %s\n",
+             msg);
+      struct Error *head = err;
+      while (head != NULL) {
+        printf("  - %s\n", VF_err_fmt(err));
+        head = head->next;
+      }
     } else {
       *pass += 1;
       printf("PASS: %s\n", msg);
+      struct Error *head = err;
+      while (head != NULL) {
+        char *exc = VF_err_fmt(head);
+        printf("  - EXPECTED: %s\n", exc);
+        free(exc);
+        head = head->next;
+      }
     }
   } else {
     *fail += 1;
-    printf("FAIL: outcome did not match expectation: %s outcome: %d expected: %d\n", msg, outcome, expected);
+    printf("FAIL: outcome did not match expectation: %s outcome: %d expected: "
+           "%d\n",
+           msg, outcome, expected);
   }
-
+  VF_err_free(err);
 }
 
-
-// Returns the number of bytes read, and sets the contents ** to the start
-// of the memory buffer
 VF_return_t read_complete_file(char *filename, char **value, long *length) {
   FILE *f = fopen(filename, "r");
   if (!f) {
@@ -100,8 +115,6 @@ char *memdup(char *src, long len) {
   return x;
 }
 
-// Do some tests.  I don't care about leaking memory in this function
-// so much, but I do care in the code being tested
 int main(void) {
   struct Error *err = NULL;
 
@@ -136,7 +149,7 @@ int main(void) {
   char *incorrect_document = memdup(document, document_l);
   incorrect_document[20] ^= 1;
 
-  //char *invalid_pubkey = memdup(pubkey, pubkey_l);
+  // char *invalid_pubkey = memdup(pubkey, pubkey_l);
   char *invalid_structure = NULL;
   long invalid_structure_l;
   if (VF_FAIL == read_complete_file("./test-files/not-valid-datastructure",
@@ -149,24 +162,55 @@ int main(void) {
   char *empty_document = "";
   char *empty_signature = "";
 
+  char *empty_pubkey_with_header =
+      "-----BEGIN CERTIFICATE-----\n\n-----END CERTIFICATE-----\n";
+  char *empty_signature_with_header =
+      "-----BEGIN PKCS7-----\n\n-----END PKCS7-----\n";
+
   VF_init();
 
   int fail = 0, pass = 0, tests = 0, outcome = VF_FAIL;
 
   // Valid Document
-  simple_test(&tests, &pass, &fail, VF_SUCCESS, pubkey, pubkey_l, document, document_l, signature, signature_l, "valid Document");
+  simple_test(&tests, &pass, &fail, VF_SUCCESS, pubkey, pubkey_l, document,
+              document_l, signature, signature_l, "valid Document");
 
   // Things with bitflips
-  simple_test(&tests, &pass, &fail, VF_FAIL, pubkey, pubkey_l, incorrect_document, document_l, signature, signature_l, "Invalid Document");
+  simple_test(&tests, &pass, &fail, VF_FAIL, pubkey, pubkey_l,
+              incorrect_document, document_l, signature, signature_l,
+              "Invalid Document");
 
   // Malformed things
-  simple_test(&tests, &pass, &fail, VF_EXCEPTION, invalid_structure, invalid_structure_l, document, document_l, signature, signature_l, "Invalid Pubkey");
-  simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document, document_l, invalid_structure, invalid_structure_l, "Invalid Signature");
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, invalid_structure,
+              invalid_structure_l, document, document_l, signature, signature_l,
+              "Invalid Pubkey");
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document,
+              document_l, invalid_structure, invalid_structure_l,
+              "Invalid Signature");
 
   // Empty things
-  simple_test(&tests, &pass, &fail, VF_FAIL, pubkey, pubkey_l, empty_document, document_l, signature, signature_l, "Invalid Document");
-  simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey, pubkey_l, document, document_l, signature, signature_l, "Invalid Pubkey");
-  simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document, document_l, empty_signature, signature_l, "Invalid Signature");
+  simple_test(&tests, &pass, &fail, VF_FAIL, pubkey, pubkey_l, empty_document,
+              document_l, signature, signature_l, "Empty Document");
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey, pubkey_l,
+              document, document_l, signature, signature_l, "Empty Pubkey");
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document,
+              document_l, empty_signature, signature_l, "Empty Signature");
+
+
+  // These don't work as John Ford expects.  He thought that a certificate or
+  // signature of zero length would cause OpenSSL to put an error in the error
+  // queue, which would trigger VF_EXCEPTION handling, but instead OpenSSL says
+  // that the verification fails, but not that it's an error.  These tests are
+  // in place to ensure behaviour is not changed, but the check for empty (with
+  // header) values here should be done inside the Javascript portion of this
+  // library
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey_with_header,
+              strlen(empty_pubkey_with_header), document, document_l, signature,
+              signature_l, "Empty Pubkey (with header)");
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document,
+              document_l, empty_signature_with_header,
+              strlen(empty_signature_with_header),
+              "Empty Signature (with header)");
 
   ///////////////////////////////////////////////
   // Test a valid thing many times

@@ -45,23 +45,33 @@ describe('verify', () => {
 
   describe('with bad values', () => {
     it('should return false with empty Buffer values', () => {
-      assume(subject(Buffer.from(''), Buffer.from(''), Buffer.from(''))).is.not.ok();
+      assume(() => {
+        subject(Buffer.from(''), Buffer.from(''), Buffer.from(''));
+      }).throws(/IID-Verify Exception$/);
     });
 
     it('should return false with empty string values', () => {
-      assume(subject('', '', '')).is.not.ok();
+      assume(() => {
+        subject('', '', '');
+      }).throws(/IID-Verify Exception$/);
     });
 
     it('should return false with zero-length Buffer values', () => {
-      assume(subject(Buffer.of(0), Buffer.of(0), Buffer.of(0))).is.not.ok();
+      assume(() => {
+        subject(Buffer.of(0), Buffer.of(0), Buffer.of(0));
+      }).throws(/IID-Verify Exception$/);
     });
 
     it('should return false with all new-line string values', () => {
-      assume(subject('\n\n\n', '\n\n\n', '\n\n\n')).is.not.ok();
+      assume(() => {
+        subject('\n\n\n', '\n\n\n', '\n\n\n');
+      }).throws(/IID-Verify Exception$/);
     });
 
     it('should return false with all new-line buffer values', () => {
-      assume(subject(Buffer.from('\n\n\n'), Buffer.from('\n\n\n'), Buffer.from('\n\n\n'))).is.not.ok();
+      assume(() => {
+        subject(Buffer.from('\n\n\n'), Buffer.from('\n\n\n'), Buffer.from('\n\n\n'));
+      }).throws(/IID-Verify Exception$/);
     });
 
     it('should throw error with invalid cert structured data', () => {
