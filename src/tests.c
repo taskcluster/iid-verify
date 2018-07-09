@@ -10,8 +10,9 @@
 #endif
 
 void simple_test(int *tests, int *pass, int *fail, VF_return_t expected,
-                 uint8_t *pubkey, int pubkey_l, uint8_t *document, int document_l,
-                 uint8_t *signature, int signature_l, char *msg) {
+                 uint8_t *pubkey, int pubkey_l, uint8_t *document,
+                 int document_l, uint8_t *signature, int signature_l,
+                 char *msg) {
 
   struct timeval start;
   struct timeval end;
@@ -157,14 +158,14 @@ int main(void) {
     exit(1);
   }
 
-  uint8_t *empty_pubkey = (uint8_t*) "";
-  uint8_t *empty_document = (uint8_t*) "";
-  uint8_t *empty_signature = (uint8_t*) "";
+  uint8_t *empty_pubkey = (uint8_t *)"";
+  uint8_t *empty_document = (uint8_t *)"";
+  uint8_t *empty_signature = (uint8_t *)"";
 
   uint8_t *empty_pubkey_with_header =
-      (uint8_t*) "-----BEGIN CERTIFICATE-----\n\n-----END CERTIFICATE-----\n";
+      (uint8_t *)"-----BEGIN CERTIFICATE-----\n\n-----END CERTIFICATE-----\n";
   uint8_t *empty_signature_with_header =
-      (uint8_t*) "-----BEGIN PKCS7-----\n\n-----END PKCS7-----\n";
+      (uint8_t *)"-----BEGIN PKCS7-----\n\n-----END PKCS7-----\n";
 
   VF_init();
 
@@ -203,11 +204,11 @@ int main(void) {
   // header) values here should be done inside the Javascript portion of this
   // library
   simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey_with_header,
-              strlen((char*)empty_pubkey_with_header) + 1, document, document_l,
-              signature, signature_l, "Empty Pubkey (with header)");
+              strlen((char *)empty_pubkey_with_header) + 1, document,
+              document_l, signature, signature_l, "Empty Pubkey (with header)");
   simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document,
               document_l, empty_signature_with_header,
-              strlen((char*)empty_signature_with_header) + 1,
+              strlen((char *)empty_signature_with_header) + 1,
               "Empty Signature (with header)");
 
   ///////////////////////////////////////////////
