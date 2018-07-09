@@ -116,7 +116,6 @@ VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
     } else {
       rv = VF_EXCEPTION;
     }
-
   }
 
 end:
@@ -160,6 +159,7 @@ end:
       // falsy value, which means that the error queue doesn't work as
       // documented in the man page.
       if (!errorNum) {
+        free(new);
         break;
       }
       new->reason = ERR_reason_error_string(errorNum);
