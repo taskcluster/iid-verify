@@ -99,6 +99,8 @@ VF_return_t read_complete_file(char *filename, uint8_t **value, long *length) {
 
   int read = fread(*value, 1, size, f);
 
+  (*value)[size] = 0;
+
   if (!ferror(f) && read == size) {
     fclose(f);
     *length = size;
@@ -106,6 +108,7 @@ VF_return_t read_complete_file(char *filename, uint8_t **value, long *length) {
   } else {
     perror("Reading file");
     fclose(f);
+    free(value);
     return VF_FAIL;
   }
 }
