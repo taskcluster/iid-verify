@@ -42,8 +42,8 @@ char *VF_err_fmt(struct Error *err) {
   return msg;
 }
 
-VF_return_t VF_verify(char *pubkey, uint64_t pubkey_l, char *document,
-                      uint64_t document_l, char *pkcs7, uint64_t pkcs7_l,
+VF_return_t VF_verify(uint8_t *pubkey, uint64_t pubkey_l, uint8_t *document,
+                      uint64_t document_l, uint8_t *pkcs7, uint64_t pkcs7_l,
                       struct Error **err) {
   // We want to clear the OpenSSL Error queue so that we know when we're in the
   // cleanup section, any errors we hit are the result of this invocation
