@@ -1,10 +1,3 @@
-#include <openssl/bio.h>
-#include <openssl/cms.h>
-#include <openssl/err.h>
-#include <openssl/pem.h>
-#include <openssl/safestack.h>
-#include <openssl/x509.h>
-#include <openssl/x509_vfy.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,8 +9,47 @@
 #define BENCH_ITER 100
 #endif
 
-// Set up some stdio wrappers for dumping BIO messages
-BIO *bio_out, *bio_err;
+void simple_test(int *tests, int *pass, int *fail, VF_return_t expected, char*
+    pubkey, int pubkey_l, char* document, int document_l, char* signature, int
+    signature_l, char* msg) {
+
+  struct timeval start;
+  struct timeval end;
+
+  struct Error *err = NULL;
+
+  gettimeofday(&start, NULL);
+
+  VF_return_t outcome = VF_verify(pubkey, pubkey_l, document, document_l, signature,
+      signature_l, &err);
+
+  gettimeofday(&end, NULL);
+
+  long duration =
+      (end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec;
+
+  printf("%ld microseconds: ", duration);
+
+  *tests += 1;
+
+  if (outcome == expected) {
+    if (expected == VF_EXCEPTION && err != NULL) {
+      *fail += 1;
+      printf("FAIL: expected exception, received none: %s\n", msg);
+    } else if (expected != VF_EXCEPTION && err != NULL) {
+      *fail += 1;
+      printf("FAIL: did not expect exception, received one: %s\n", msg);
+    } else {
+      *pass += 1;
+      printf("PASS: %s\n", msg);
+    }
+  } else {
+    *fail += 1;
+    printf("FAIL: outcome did not match expectation: %s outcome: %d expected: %d\n", msg, outcome, expected);
+  }
+
+}
+
 
 // Returns the number of bytes read, and sets the contents ** to the start
 // of the memory buffer
@@ -62,18 +94,6 @@ VF_return_t read_complete_file(char *filename, char **value, long *length) {
   }
 }
 
-// Print out a complete BIO to console, probably only safe to do on simple BIO
-// types, like memory buffer backed ones
-//
-// NOTE: This code is only intended for testing/debugging
-void print_bio_s_mem(BIO *bio, size_t len) {
-  char *value = malloc(sizeof(char) * len);
-  BIO_read(bio, value, len);
-  BIO_write(bio_out, value, len);
-  BIO_printf(bio_out, "\n");
-  free(value);
-}
-
 char *memdup(char *src, long len) {
   char *x = malloc(len);
   memcpy(x, src, len);
@@ -83,27 +103,25 @@ char *memdup(char *src, long len) {
 // Do some tests.  I don't care about leaking memory in this function
 // so much, but I do care in the code being tested
 int main(void) {
-  bio_out = BIO_new_fp(stdout, BIO_NOCLOSE);
-  bio_err = BIO_new_fp(stderr, BIO_NOCLOSE);
   struct Error *err = NULL;
 
-  char *pubkey;
+  char *pubkey = NULL;
   long pubkey_l;
   if (VF_FAIL ==
       read_complete_file("./test-files/rsa2048-pubkey", &pubkey, &pubkey_l)) {
-    BIO_printf(bio_err, "failed to read rsa2048 public key file");
+    fprintf(stderr, "failed to read rsa2048 public key file\n");
     exit(1);
   }
 
-  char *document;
+  char *document = NULL;
   long document_l;
   if (VF_FAIL ==
       read_complete_file("./test-files/document", &document, &document_l)) {
-    BIO_printf(bio_err, "failed to read clear text document");
+    fprintf(stderr, "failed to read clear text document\n");
     exit(1);
   }
 
-  char *signature;
+  char *signature = NULL;
   long signature_l;
   // Note that we have a special version of the RSA2048 PKCS#7 document that
   // has the headers added to it.  This is something that Amazon does not
@@ -111,38 +129,44 @@ int main(void) {
   // this library
   if (VF_FAIL == read_complete_file("./test-files/rsa2048-with-header",
                                     &signature, &signature_l)) {
-    BIO_printf(bio_err, "failed to read PKCS#7 signature");
+    fprintf(stderr, "failed to read PKCS#7 signature\n");
+    exit(1);
   }
 
-  char *invalid_pubkey = memdup(pubkey, pubkey_l);
-  char *invalid_document = memdup(document, document_l);
-  char *invalid_signature = memdup(signature, signature_l);
+  char *incorrect_document = memdup(document, document_l);
+  incorrect_document[20] ^= 1;
 
-  invalid_pubkey[20] ^= 1;
-  invalid_document[20] ^= 1;
-  invalid_signature[20] ^= 1;
+  //char *invalid_pubkey = memdup(pubkey, pubkey_l);
+  char *invalid_structure = NULL;
+  long invalid_structure_l;
+  if (VF_FAIL == read_complete_file("./test-files/not-valid-datastructure",
+                                    &invalid_structure, &invalid_structure_l)) {
+    fprintf(stderr, "failed to read invalid data signature\n");
+    exit(1);
+  }
+
+  char *empty_pubkey = "";
+  char *empty_document = "";
+  char *empty_signature = "";
 
   VF_init();
 
   int fail = 0, pass = 0, tests = 0, outcome = VF_FAIL;
 
-  ///////////////////////////////////////////////
-  // Test a valid thing
-  err = NULL;
-  outcome = VF_verify(pubkey, pubkey_l, document, document_l, signature,
-                      signature_l, &err);
-  tests++;
-  switch (outcome) {
-  case VF_SUCCESS:
-    pass++;
-    break;
-  case VF_EXCEPTION:
-    VF_err_free(err);
-  default:
-    fprintf(stderr, "FAIL: valid thing failed");
-    fail++;
-    break;
-  }
+  // Valid Document
+  simple_test(&tests, &pass, &fail, VF_SUCCESS, pubkey, pubkey_l, document, document_l, signature, signature_l, "valid Document");
+
+  // Things with bitflips
+  simple_test(&tests, &pass, &fail, VF_FAIL, pubkey, pubkey_l, incorrect_document, document_l, signature, signature_l, "Invalid Document");
+
+  // Malformed things
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, invalid_structure, invalid_structure_l, document, document_l, signature, signature_l, "Invalid Pubkey");
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document, document_l, invalid_structure, invalid_structure_l, "Invalid Signature");
+
+  // Empty things
+  simple_test(&tests, &pass, &fail, VF_FAIL, pubkey, pubkey_l, empty_document, document_l, signature, signature_l, "Invalid Document");
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, empty_pubkey, pubkey_l, document, document_l, signature, signature_l, "Invalid Pubkey");
+  simple_test(&tests, &pass, &fail, VF_EXCEPTION, pubkey, pubkey_l, document, document_l, empty_signature, signature_l, "Invalid Signature");
 
   ///////////////////////////////////////////////
   // Test a valid thing many times
@@ -183,72 +207,17 @@ int main(void) {
     fprintf(stderr, "FAIL: multiple iterations\n");
   }
 
-  ///////////////////////////////////////////////
-  // Test an invalid document
-  err = NULL;
-  outcome = VF_verify(pubkey, pubkey_l, invalid_document, document_l, signature,
-                      signature_l, &err);
-  tests++;
-  switch (outcome) {
-  case VF_FAIL:
-    pass++;
-    break;
-  case VF_EXCEPTION:
-    VF_err_free(err);
-  default:
-    fail++;
-    fprintf(stderr, "FAIL: invalid document\n");
-  }
-
-  ///////////////////////////////////////////////
-  // Test an invalid pubkey
-  err = NULL;
-  outcome = VF_verify(invalid_pubkey, pubkey_l, document, document_l, signature,
-                      signature_l, &err);
-  tests++;
-  switch (outcome) {
-  case VF_EXCEPTION:
-    VF_err_free(err);
-  case VF_FAIL:
-    pass++;
-    break;
-  default:
-    fail++;
-    fprintf(stderr, "FAIL: invalid pubkey\n");
-  }
-
-  ///////////////////////////////////////////////
-  // Test an invalid signature
-  err = NULL;
-  outcome = VF_verify(pubkey, pubkey_l, document, document_l, invalid_signature,
-                      signature_l, &err);
-  tests++;
-  switch (outcome) {
-  case VF_EXCEPTION:
-    VF_err_free(err);
-  case VF_FAIL:
-    pass++;
-    break;
-  default:
-    fail++;
-    fprintf(stderr, "FAIL: invalid signature\n");
-  }
-
-  BIO_printf(bio_out, "%d tests run, %d passed\n", tests, pass);
-
-  BIO_flush(bio_out);
-  BIO_flush(bio_err);
-  fflush(stdout);
-  fflush(stderr);
-  BIO_free(bio_out);
-  BIO_free(bio_err);
+  fprintf(stdout, "%d tests run, %d passed, %d failed\n", tests, pass, fail);
 
   free(document);
   free(pubkey);
   free(signature);
-  free(invalid_document);
-  free(invalid_pubkey);
-  free(invalid_signature);
+  free(incorrect_document);
+  free(invalid_structure);
 
-  return tests - pass + fail;
+  if (tests <= 0 || fail > 0 || pass <= 0) {
+    return 1;
+  } else {
+    return 0;
+  }
 }

@@ -9,6 +9,10 @@ typedef unsigned int VF_return_t;
 #define VF_FAIL 1
 #define VF_EXCEPTION 2
 
+
+// VF_DEBUG enables extra debugging information
+//#define VF_DEBUG 1
+
 struct Error {
   const char *reason;
   const char *lib;
