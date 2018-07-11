@@ -20,7 +20,7 @@ module.exports = function verify(pubkey, document, pkcs7) {
   }
 
   if (typeof pkcs7 === 'undefined') {
-    throw new Error('pkcs7 must be provided');
+    throw new Error('pkcs7 signature must be provided');
   }
 
   if (!Buffer.isBuffer(pubkey)) {
