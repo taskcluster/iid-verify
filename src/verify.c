@@ -21,6 +21,7 @@ void VF_err_free(struct Error *err) {
   struct Error *head = err;
   struct Error *current = err;
   while (head != NULL) {
+    VF_LOG("freeing Error struct at %p\n", err);
     current = head->next;
     free(head);
     head = current;
@@ -35,16 +36,19 @@ char *VF_err_fmt(struct Error *err) {
                   err->reason);
 
   if (size < 0) {
-    return "ERROR DETERMINING LENGTH FOR ERROR STRING";
+    return NULL;
   }
 
   msg = malloc(size + 1);
+  if (msg == NULL) {
+    return NULL;
+  }
 
   size = snprintf(msg, size + 1, "%s %s:%d %s", err->lib, err->func, err->line,
                   err->reason);
 
   if (size < 0) {
-    return "ERROR PRINTING ERROR STRING TO MEMORY";
+    return NULL;
   }
 
   return msg;
@@ -72,29 +76,34 @@ VF_return_t VF_verify(uint8_t *pubkey, uint64_t pubkey_l, uint8_t *document,
   p7 = PEM_read_bio_PKCS7(bio_pkcs7, NULL, NULL, NULL);
   if (p7 == NULL) {
     rv = VF_EXCEPTION;
+    VF_ERROR("error while reading pkcs#7 envelope\n");
     goto end;
   }
 
   store = X509_STORE_new();
   if (store == NULL) {
     rv = VF_EXCEPTION;
+    VF_ERROR("error while creating certificate store\n");
     goto end;
   }
 
   certs = sk_X509_new_null();
   if (certs == NULL) {
     rv = VF_EXCEPTION;
+    VF_ERROR("error while creating stack of certificates\n");
     goto end;
   }
 
   cert = PEM_read_bio_X509(bio_pubkey, NULL, NULL, NULL);
   if (cert == NULL) {
     rv = VF_EXCEPTION;
+    VF_ERROR("error while reading certificate\n");
     goto end;
   }
 
   if (0 == sk_X509_push(certs, cert)) {
     rv = VF_EXCEPTION;
+    VF_ERROR("error while inserting certificate into stack\n");
     goto end;
   }
 
@@ -122,6 +131,7 @@ VF_return_t VF_verify(uint8_t *pubkey, uint64_t pubkey_l, uint8_t *document,
       rv = VF_FAIL;
     } else {
       rv = VF_EXCEPTION;
+      VF_ERROR("error occured while validating signature\n");
     }
   }
 
@@ -129,6 +139,7 @@ end:
   if (!BIO_free(bio_document) || !BIO_free(bio_pubkey) ||
       !BIO_free(bio_pkcs7)) {
     rv = VF_EXCEPTION;
+    VF_ERROR("error while freeing an OpenSSL data structure\n");
   }
 
   PKCS7_free(p7);
@@ -152,13 +163,20 @@ end:
     head->next = NULL;
     head->line = __LINE__;
     *err = head;
+    VF_ERROR(
+        "unknown error occured during validation, using placeholder error\n");
   } else if (errorNum && err == NULL) {
     rv = VF_EXCEPTION;
+    VF_ERROR("error in error queue for VF_SUCCESS or VF_FAIL, marking "
+             "VF_EXCEPTION\n");
   } else if (errorNum && err != NULL) {
     rv = VF_EXCEPTION;
+    VF_ERROR("error in error queue for VF_SUCCESS or VF_FAIL, marking "
+             "VF_EXCEPTION\n");
     do {
       struct Error *new = malloc(sizeof(struct Error));
       errorNum = ERR_get_error_line(&new->file, &new->line);
+
       // This break should *not* be needed because before this invocation, only
       // the ERR_peek_error() function has been called at that point.  There
       // shouldn't have been any removals from the error queue.  Sadly, this is
@@ -169,11 +187,14 @@ end:
         free(new);
         break;
       }
+
       new->reason = ERR_reason_error_string(errorNum);
       new->lib = ERR_lib_error_string(errorNum);
       new->func = ERR_func_error_string(errorNum);
       new->next = head;
       head = new;
+      VF_ERROR("adding new error to list: %s %s %s\n", new->lib, new->func,
+               new->reason);
     } while (errorNum);
     *err = head;
   }
