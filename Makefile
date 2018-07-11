@@ -13,6 +13,8 @@ memtests: src/verify.c src/tests.c
 ctests: src/verify.c src/tests.c
 	clang -g $? -o ./$@ -Wall -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000
 	./$@
+	gcc -g $? -o ./$@ -Wall -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000
+	./$@
 
 .PHONY: shell-tests
 shell-tests:

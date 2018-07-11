@@ -33,7 +33,7 @@ napi_status HandleError(napi_env env, struct Error *err) {
   free(msg);
   msg = NULL;
 
-  if (status != napi_ok){
+  if (status != napi_ok) {
     VF_ERROR("could not create js string for Error.message\n");
     return status;
   }
@@ -80,7 +80,7 @@ napi_status HandleError(napi_env env, struct Error *err) {
   }
 
   status = napi_set_named_property(env, error, "errors", errors);
-  if (status != napi_ok){
+  if (status != napi_ok) {
     VF_ERROR("could not set js Error.errors property\n");
     return status;
   }
@@ -119,13 +119,15 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
 
   status = napi_get_buffer_info(env, argv[1], (void *)&document, &document_l);
   if (status != napi_ok) {
-    napi_throw_error(env, NULL, "could not get buffer information for document");
+    napi_throw_error(env, NULL,
+                     "could not get buffer information for document");
     return NULL;
   }
 
   status = napi_get_buffer_info(env, argv[2], (void *)&signature, &signature_l);
   if (status != napi_ok) {
-    napi_throw_error(env, NULL, "could not get buffer information for signature");
+    napi_throw_error(env, NULL,
+                     "could not get buffer information for signature");
     return NULL;
   }
 
