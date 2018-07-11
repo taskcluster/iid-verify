@@ -39,7 +39,7 @@ describe('verify', () => {
     it('should throw when pkcs7 isnt provided', () => {
       assume(() => {
         subject('x', 'y', undefined);
-      }).throws(/^pkcs7 must be provided$/);
+      }).throws(/^pkcs7 signature must be provided$/);
     });
   });
 
