@@ -9,8 +9,13 @@ typedef int VF_return_t;
 #define VF_FAIL 1
 #define VF_EXCEPTION -1
 
-// VF_DEBUG enables extra debugging information
-//#define VF_DEBUG 1
+#ifdef VF_DEBUG
+#define VF_LOG(...) fprintf(stdout, "INFO: " __VA_ARGS__)
+#define VF_ERROR(...) fprintf(stderr, "ERROR: "__VA_ARGS__)
+#else
+#define VF_LOG(...)
+#define VF_ERROR(...)
+#endif
 
 struct Error {
   const char *reason;
