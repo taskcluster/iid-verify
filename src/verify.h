@@ -48,9 +48,9 @@ char *VF_err_fmt(struct Error *err);
 // pass in as a pointer to a memory buffer and the length of the buffer.
 //
 // If there are errors encountered during the invocation, they will be stored
-// in the **errors list, along with the number of errors in the errors_n
-// parameter.  This memory is allocated in the VF_verify function but is owned
-// by the caller, which is responsible for freeing it
+// in the **errors list out-parameter.  This memory is allocated in the
+// VF_verify function but is owned by the caller, which is responsible for
+// freeing it.  Using VF_err_free is strongly recommended.
 VF_return_t VF_verify(uint8_t *pubkey, uint64_t pubkey_l, uint8_t *document,
                       uint64_t document_l, uint8_t *pkcs7, uint64_t pkcs7_l,
                       struct Error **err);
