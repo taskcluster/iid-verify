@@ -12,9 +12,9 @@ let verify = require('iid-verify');
 // http://169.254.169.254/latest/dynamic/instance-identity/{rsa2048, document}
 // Public key provided by Amazon
 
-// document is a JSON file available through the metadata service // which
-contains information about the instance like instance id and // AMI used to
-configure the instance
+// document is a JSON file available through the metadata service which
+// contains information about the instance like instance id and AMI used to
+// configure the instance
 let document = fs.readFileSync('document');
 
 // rsa2048 is a PCKS#7 envelope which contains the cryptographic signature
@@ -24,7 +24,7 @@ let document = fs.readFileSync('document');
 let rsa2048 = fs.readFileSync('rsa2048');
 
 // pubkey is a PEM encoded public key as provided by Amazon EC2.  This
-// public key is unique to each region and each account and so must be 
+// public key is unique to each region and each account and so must be
 // obtained by requesting in a service ticket
 let pubkey = fs.readFileSync('pubkey');
 
@@ -75,7 +75,7 @@ function in the N-API C portion of the library.
 ```javascript
 let err = new Error('asn1 encoding routines ../deps/openssl/openssl/crypto/asn1/asn1_lib.c:157 ASN1_get_object header too long');
 err.errors = [
-'PEM routines ../deps/openssl/openssl/crypto/pem/pem_oth.c:83 PEM_ASN1_read_bio ASN1 lib',
+     'PEM routines ../deps/openssl/openssl/crypto/pem/pem_oth.c:83 PEM_ASN1_read_bio ASN1 lib',
      'asn1 encoding routines ../deps/openssl/openssl/crypto/asn1/tasn_dec.c:374 ASN1_ITEM_EX_D2I nested asn1 error',
      'asn1 encoding routines ../deps/openssl/openssl/crypto/asn1/tasn_dec.c:1188 ASN1_CHECK_TLEN bad object header',
      'asn1 encoding routines ../deps/openssl/openssl/crypto/asn1/asn1_lib.c:157 ASN1_get_object header too long'
