@@ -11,8 +11,21 @@ let verify = require('iid-verify');
 
 // http://169.254.169.254/latest/dynamic/instance-identity/{rsa2048, document}
 // Public key provided by Amazon
+
+// document is a JSON file available through the metadata service // which
+contains information about the instance like instance id and // AMI used to
+configure the instance
 let document = fs.readFileSync('document');
+
+// rsa2048 is a PCKS#7 envelope which contains the cryptographic signature
+// of the document computed against the Amazon EC2 private key.  We strongly
+// suggest using the rsa2048 enpoint instead of the pkcs7 endpoint because
+// the rsa2048 endpoint uses SHA256 instead of the pkcs7 endpoint's SHA1
 let rsa2048 = fs.readFileSync('rsa2048');
+
+// pubkey is a PEM encoded public key as provided by Amazon EC2.  This
+// public key is unique to each region and each account and so must be 
+// obtained by requesting in a service ticket
 let pubkey = fs.readFileSync('pubkey');
 
 if (verify(pubkey, document, rsa2048)){
