@@ -26,29 +26,11 @@ napi_status HandleError(napi_env env, struct Error *err) {
     return status;
   }
 
-  // We're going to create the error object so that the head of the err linked
-  // list is the error object's message.  This *should* be the root error
-  msg = VF_err_fmt(err);
-  status = napi_create_string_utf8(env, msg, NAPI_AUTO_LENGTH, &errorString);
-  free(msg);
-  msg = NULL;
-
-  if (status != napi_ok) {
-    VF_ERROR("could not create js string for Error.message\n");
-    return status;
-  }
-
-  status = napi_create_error(env, NULL, errorString, &error);
-  if (status != napi_ok) {
-    VF_ERROR("could not create js Error object\n");
-    return status;
-  }
-
-  // We're limiting to the first MAX_OPENSSL_ERRORS so that we don't
-  // cause an infinite loop
+  // Limit to the first MAX_OPENSSL_ERRORS to guard against the case where
+  // a linked list is improperly formed.  If this happens, we will stop
+  // reading more errors after MAX_OPENSSL_ERRORS errors are read
   int i = 0;
   while (err != NULL) {
-    i++;
     if (i > MAX_OPENSSL_ERRORS) {
       VF_LOG("displaying only first %d error messages\n", MAX_OPENSSL_ERRORS);
       break;
@@ -77,8 +59,15 @@ napi_status HandleError(napi_env env, struct Error *err) {
     }
 
     err = err->next;
+    i++;
   }
 
+  status = napi_create_error(env, NULL, errorString, &error);
+  if (status != napi_ok) {
+    VF_ERROR("could not create js Error object\n");
+    return status;
+  }
+  
   status = napi_set_named_property(env, error, "errors", errors);
   if (status != napi_ok) {
     VF_ERROR("could not set js Error.errors property\n");

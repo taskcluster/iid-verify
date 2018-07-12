@@ -47,43 +47,71 @@ describe('verify', () => {
     it('should return false with empty Buffer values', () => {
       assume(() => {
         subject(Buffer.from(''), Buffer.from(''), Buffer.from(''));
-      }).throws(/IID-Verify Exception$/);
+      }).throws(/VF_verify Exception$/);
     });
 
     it('should return false with empty string values', () => {
       assume(() => {
         subject('', '', '');
-      }).throws(/IID-Verify Exception$/);
+      }).throws(/VF_verify Exception$/);
     });
 
     it('should return false with zero-length Buffer values', () => {
       assume(() => {
         subject(Buffer.of(0), Buffer.of(0), Buffer.of(0));
-      }).throws(/IID-Verify Exception$/);
+      }).throws(/VF_verify Exception$/);
     });
 
     it('should return false with all new-line string values', () => {
       assume(() => {
         subject('\n\n\n', '\n\n\n', '\n\n\n');
-      }).throws(/IID-Verify Exception$/);
+      }).throws(/VF_verify Exception$/);
     });
 
     it('should return false with all new-line buffer values', () => {
       assume(() => {
         subject(Buffer.from('\n\n\n'), Buffer.from('\n\n\n'), Buffer.from('\n\n\n'));
-      }).throws(/IID-Verify Exception$/);
+      }).throws(/VF_verify Exception$/);
     });
 
     it('should throw error with invalid cert structured data', () => {
       assume(() => {
         subject(pubkey, document, 'kaldsjflasjflsdf');
-      }).throws(/PEM_ASN1_read_bio/);
+      }).throws(/ASN1_get_object header too long$/);
     });
 
     it('should throw error with invalid pubkey data', () => {
       assume(() => {
         subject('kadjflakdjfa', document, pkcs7);
       }).throws(/PEM_read_bio/);
+    });
+  });
+
+  describe('error handling', () => {
+    it('should throw an error when an OpenSSL error occurs', () => {
+      try {
+        subject(pubkey, document, 'askldjflkasd');
+        return Promise.reject('should not reach this code');
+      } catch (err) {
+        console.dir(err);
+        console.log(JSON.stringify(err));
+        assume(err).has.property('errors');
+        assume(err.message).matches(/ASN1_get_object header too long/);
+
+        assume(err.errors).is.array();
+        assume(err.errors).lengthOf(4);
+        assume(err.errors[0]).is.ok();
+        assume(err.errors[0]).matches(/PEM_ASN1_read_bio ASN1 lib/);
+
+        assume(err.errors[1]).is.ok();
+        assume(err.errors[1]).matches(/ASN1_ITEM_EX_D2I nested asn1 error/);
+
+        assume(err.errors[2]).is.ok();
+        assume(err.errors[2]).matches(/ASN1_CHECK_TLEN bad object header/);
+
+        assume(err.errors[3]).is.ok();
+        assume(err.errors[3]).matches(/ASN1_get_object header too long/);
+      }
     });
   });
 
@@ -183,8 +211,15 @@ describe('verify', () => {
           } catch (err) {
             // We want to account for errors caused by our own generation of
             // and invalid PEM file
-            if (!/PEM_ASN1_read_bio/.test(err.message)) {
-              throw err;
+            let asn1Errors = [
+              /ASN1_CHECK_TLEN/,
+              /ASN1_ITEM_EX_D2I/
+            ];
+            let isAcceptableError = false;
+            for (pattern of asn1Errors) {
+              if (pattern.test(err.message)) {
+                isAcceptableError = true;
+              }
             }
           }
         }

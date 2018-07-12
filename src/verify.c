@@ -32,8 +32,8 @@ char *VF_err_fmt(struct Error *err) {
   int size;
   char *msg = NULL;
 
-  size = snprintf(NULL, 0, "%s %s:%d %s", err->lib, err->func, err->line,
-                  err->reason);
+  size = snprintf(NULL, 0, "%s %s:%d %s %s", err->lib, err->file, err->line,
+                  err->func, err->reason);
 
   if (size < 0) {
     return NULL;
@@ -44,8 +44,8 @@ char *VF_err_fmt(struct Error *err) {
     return NULL;
   }
 
-  size = snprintf(msg, size + 1, "%s %s:%d %s", err->lib, err->func, err->line,
-                  err->reason);
+  size = snprintf(msg, size + 1, "%s %s:%d %s %s", err->lib, err->file, err->line,
+                  err->func, err->reason);
 
   if (size < 0) {
     return NULL;
@@ -157,8 +157,9 @@ end:
     // we'd use ERR_put_error to insert error messages which we could use to
     // display using a single error reporting system.
     head = malloc(sizeof(struct Error));
-    head->reason = "IID-Verify Exception";
-    head->lib = __FILE__;
+    head->reason = "Exception";
+    head->file = __FILE__;
+    head->lib = "IID-Verify";
     head->func = "VF_verify";
     head->next = NULL;
     head->line = __LINE__;
@@ -173,7 +174,7 @@ end:
     rv = VF_EXCEPTION;
     VF_ERROR("error in error queue for VF_SUCCESS or VF_FAIL, marking "
              "VF_EXCEPTION\n");
-    do {
+    for (;;) {
       struct Error *new = malloc(sizeof(struct Error));
       errorNum = ERR_get_error_line(&new->file, &new->line);
 
@@ -195,7 +196,7 @@ end:
       head = new;
       VF_ERROR("adding new error to list: %s %s %s\n", new->lib, new->func,
                new->reason);
-    } while (errorNum);
+    };
     *err = head;
   }
 
