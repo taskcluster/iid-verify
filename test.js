@@ -77,13 +77,13 @@ describe('verify', () => {
     it('should throw error with invalid cert structured data', () => {
       assume(() => {
         subject(pubkey, document, 'kaldsjflasjflsdf');
-      }).throws(/ASN1_get_object header too long$/);
+      }).throws(/ASN1_get_object header too long/i);
     });
 
     it('should throw error with invalid pubkey data', () => {
       assume(() => {
         subject('kadjflakdjfa', document, pkcs7);
-      }).throws(/PEM_read_bio/);
+      }).throws(/PEM_read_bio/i);
     });
   });
 
@@ -94,21 +94,21 @@ describe('verify', () => {
         return Promise.reject('should not reach this code');
       } catch (err) {
         assume(err).has.property('errors');
-        assume(err.message).matches(/ASN1_get_object header too long/);
+        assume(err.message).matches(/header too long/);
 
         assume(err.errors).is.array();
         assume(err.errors).lengthOf(4);
         assume(err.errors[0]).is.ok();
-        assume(err.errors[0]).matches(/PEM_ASN1_read_bio ASN1 lib/);
+        assume(err.errors[0]).matches(/ASN1 lib/);
 
         assume(err.errors[1]).is.ok();
-        assume(err.errors[1]).matches(/ASN1_ITEM_EX_D2I nested asn1 error/);
+        assume(err.errors[1]).matches(/nested asn1 error/);
 
         assume(err.errors[2]).is.ok();
-        assume(err.errors[2]).matches(/ASN1_CHECK_TLEN bad object header/);
+        assume(err.errors[2]).matches(/bad object header/);
 
         assume(err.errors[3]).is.ok();
-        assume(err.errors[3]).matches(/ASN1_get_object header too long/);
+        assume(err.errors[3]).matches(/header too long/);
       }
     });
   });
