@@ -44,8 +44,8 @@ char *VF_err_fmt(struct Error *err) {
     return NULL;
   }
 
-  size = snprintf(msg, size + 1, "%s %s:%d %s %s", err->lib, err->file, err->line,
-                  err->func, err->reason);
+  size = snprintf(msg, size + 1, "%s %s:%d %s %s", err->lib, err->file,
+                  err->line, err->func, err->reason);
 
   if (size < 0) {
     return NULL;

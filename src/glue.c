@@ -67,7 +67,7 @@ napi_status HandleError(napi_env env, struct Error *err) {
     VF_ERROR("could not create js Error object\n");
     return status;
   }
-  
+
   status = napi_set_named_property(env, error, "errors", errors);
   if (status != napi_ok) {
     VF_ERROR("could not set js Error.errors property\n");
