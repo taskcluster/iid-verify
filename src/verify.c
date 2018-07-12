@@ -22,6 +22,10 @@ void VF_err_free(struct Error *err) {
   struct Error *current = err;
   while (head != NULL) {
     VF_LOG("freeing Error struct at %p\n", err);
+    if (current == head->next) {
+      VF_ERROR("found a simple-cycle in error linked list\n");
+      break;
+    }
     current = head->next;
     free(head);
     head = current;

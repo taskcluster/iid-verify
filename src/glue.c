@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_OPENSSL_ERRORS 25
-
 napi_status HandleError(napi_env env, struct Error *err) {
   napi_status status;
   napi_value error;       // The js Error object
@@ -26,16 +24,8 @@ napi_status HandleError(napi_env env, struct Error *err) {
     return status;
   }
 
-  // Limit to the first MAX_OPENSSL_ERRORS to guard against the case where
-  // a linked list is improperly formed.  If this happens, we will stop
-  // reading more errors after MAX_OPENSSL_ERRORS errors are read
   int i = 0;
   while (err != NULL) {
-    if (i > MAX_OPENSSL_ERRORS) {
-      VF_LOG("displaying only first %d error messages\n", MAX_OPENSSL_ERRORS);
-      break;
-    }
-
     msg = VF_err_fmt(err);
 
     if (msg == NULL) {
@@ -58,6 +48,10 @@ napi_status HandleError(napi_env env, struct Error *err) {
       return status;
     }
 
+    if (err == err->next) {
+      VF_ERROR("found simple-cycle in error linked list\n");
+      break;
+    }
     err = err->next;
     i++;
   }

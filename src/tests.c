@@ -254,6 +254,23 @@ int main(void) {
     fprintf(stderr, "FAIL: multiple iterations\n");
   }
 
+  ///////////////////
+  // Test that a simple defective linked list does not cause infinite loop This
+  // simulates a common cause of infinite looping, memory reuse
+
+  struct Error *e = malloc(sizeof(struct Error));
+  e->next = e;
+  printf("Running a VF_err_free test.  If you do not see VF_err_free OK ");
+  printf("in one second, this test is frozen and should be quit...\n");
+  // Note: no way kill a spinning program due to the unsolved nature of the
+  // halting problem and threading being non-trivial to use here.
+  VF_err_free(e);
+  printf("VF_err_free OK\n");
+  free(e);
+  // This test either locks the process or passes...
+  tests++;
+  pass++;
+
   fprintf(stdout, "%d tests run, %d passed, %d failed\n", tests, pass, fail);
 
   free(document);
