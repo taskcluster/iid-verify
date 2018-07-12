@@ -93,8 +93,6 @@ describe('verify', () => {
         subject(pubkey, document, 'askldjflkasd');
         return Promise.reject('should not reach this code');
       } catch (err) {
-        console.dir(err);
-        console.log(JSON.stringify(err));
         assume(err).has.property('errors');
         assume(err.message).matches(/ASN1_get_object header too long/);
 
