@@ -140,10 +140,19 @@ VF_return_t VF_verify(uint8_t *pubkey, uint64_t pubkey_l, uint8_t *document,
   }
 
 end:
-  if (!BIO_free(bio_document) || !BIO_free(bio_pubkey) ||
-      !BIO_free(bio_pkcs7)) {
+  if (!BIO_free(bio_document)) {
     rv = VF_EXCEPTION;
-    VF_ERROR("error while freeing an OpenSSL data structure\n");
+    VF_ERROR("error while freeing document OpenSSL buffer\n");
+  }
+
+  if (!BIO_free(bio_pubkey)) {
+    rv = VF_EXCEPTION;
+    VF_ERROR("error while freeing public key OpenSSL buffer\n");
+  }
+
+  if (!BIO_free(bio_pkcs7)) {
+    rv = VF_EXCEPTION;
+    VF_ERROR("error while freeing pkcs7 signature OpenSSL buffer\n");
   }
 
   PKCS7_free(p7);

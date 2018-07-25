@@ -228,12 +228,10 @@ int main(void) {
     err = NULL;
     outcome = VF_verify(pubkey, pubkey_l, document, document_l, signature,
                         signature_l, &err);
-    switch (outcome) {
-    case VF_SUCCESS:
-      break;
-    case VF_EXCEPTION:
-      VF_err_free(err);
-    default:
+    if (outcome != VF_SUCCESS) {
+      if (err != NULL) {
+        VF_err_free(err);
+      }
       failed_iterations++;
       fprintf(stderr, "FAIL: iteration %d", i);
     }

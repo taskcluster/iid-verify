@@ -6,14 +6,14 @@ clangfmt:
 
 .PHONY: memtests
 memtests: src/verify.c src/tests.c
-	clang -g $? -o ./$@ -Wall -Werror -lcrypto -lefence -DEXTRA_DEBUG -DBENCH_ITER=$(BENCH_ITER)
+	clang -g $? -o ./$@ -Wall -Wextra -Werror -lcrypto -lefence -DEXTRA_DEBUG -DBENCH_ITER=$(BENCH_ITER)
 	valgrind --read-var-info=yes --track-origins=yes --leak-check=full ./$@
 
 .PHONY: ctests
 ctests: src/verify.c src/tests.c
-	clang -g $? -o ./$@ -Wall -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000
+	clang -g $? -o ./$@ -Wall -Wextra -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000
 	./$@
-	gcc -g $? -o ./$@ -Wall -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000
+	gcc -g $? -o ./$@ -Wall -Wextra -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000
 	./$@
 
 .PHONY: shell-tests
@@ -23,7 +23,6 @@ shell-tests:
 .PHONY: format
 format:
 	clang-format -i src/*.c src/*.h
-
 
 .PHONY: test
 test: format memtests ctests shell-tests
