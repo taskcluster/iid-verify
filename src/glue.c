@@ -24,8 +24,7 @@ napi_status HandleError(napi_env env, struct Error *err) {
     return status;
   }
 
-  int i = 0;
-  while (err != NULL) {
+  for (int i = 0; err != NULL; i++) {
     msg = VF_err_fmt(err);
 
     if (msg == NULL) {
@@ -36,6 +35,7 @@ napi_status HandleError(napi_env env, struct Error *err) {
     status = napi_create_string_utf8(env, msg, NAPI_AUTO_LENGTH, &errorString);
     if (status != napi_ok) {
       VF_ERROR("could not create js string for openssl error: %s\n", msg);
+      free(msg);
       return status;
     }
 
@@ -45,15 +45,17 @@ napi_status HandleError(napi_env env, struct Error *err) {
     status = napi_set_element(env, errors, i, errorString);
     if (status != napi_ok) {
       VF_ERROR("could not set error %s as index %d on Errors.errors array");
+      free(msg);
       return status;
     }
+
+    free(msg);
 
     if (err == err->next) {
       VF_ERROR("found simple-cycle in error linked list\n");
       break;
     }
     err = err->next;
-    i++;
   }
 
   status = napi_create_error(env, NULL, errorString, &error);
@@ -121,13 +123,16 @@ napi_value Call_VF_verify(napi_env env, napi_callback_info info) {
 
   if (result == VF_EXCEPTION) {
     status = HandleError(env, err);
+    VF_err_free(err);
     if (status != napi_ok) {
       napi_throw_error(env, NULL, "could not handle error");
       return NULL;
     }
   } else {
+    VF_err_free(err);
     status = napi_get_boolean(env, result == VF_SUCCESS, &outcome);
     if (status != napi_ok) {
+      VF_err_free(err);
       napi_throw_error(env, NULL, "could not get reference to boolean");
       return NULL;
     }

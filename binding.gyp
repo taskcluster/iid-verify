@@ -12,6 +12,7 @@
       'cflags': [
         '-std=c99',
         '-Wall',
+        '-Wextra',
         '-Werror'
       ],
       'ldflags': [
