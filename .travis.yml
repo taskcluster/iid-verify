@@ -1,18 +1,23 @@
 language: node_js
 dist: trusty
 node_js:
-  - "10"
+- '10'
 addons:
   apt:
     packages:
-      - clang
-      - electric-fence
-      - valgrind
-      - g++-4.8
+    - clang
+    - electric-fence
+    - valgrind
+    - g++-4.8
 env:
   global:
-    - CC=gcc-4.8
-    - CXX=g++-4.8
+  - CC=gcc-4.8
+  - CXX=g++-4.8
 script:
-  - yarn test
-  - make test
+- yarn test
+- make test
+deploy:
+  provider: npm
+  email: taskcluster-accounts@mozilla.com
+  api_key:
+    secure: sgGvmsqhxeM/d4YFSURyWwRHy4VN81RcvfQU3/uM3SYgicJ1tFqyOcHdW8kC0P7NeEl0J14EinmSKCVPmP6LlUqYygI7fPU6AOL90pqwTDH33jVMHi8e4AiACu/lMy7ezTkYg8tWScf94wT0SjYlTNtWxLmZNLGw72q/9Ho6Ev7qrzrH4hP0szL9vgUEcntrCg8QO9ZYTmFAHarAjHM2R3wUO7WLrZ8sRBT/3CZAbAHdRkvGe6ayLNr0ikQnfIPrijWajjGyrd8yrv7GygXOIsw8qBstDl0/ORnt0FyTfo7SgZjiva1HnsG8+Vnk0MhiSFaP0dN71bXwXgVgr1wb7X+d+u83H6RCxMv7mlV5Up52mVXEpH9Ufc6cMJa3y4pWJps+cNs3wvxSRr9JeYOMjSe+qOOLDWuLY/XuFwAceHmM6b8oRJB9E7v8NZLPUzCgW63Trvv6ObiJLwWU+4Qev+EqKDmbm0JphU8RdX9S6D7pPg7Wl2G2Wa9mQ26eS9Oyc0LxVb5+NuHsv7dfvLuNgDQlPoDCyuWAyzvDeaXfqmA2rVOC8SaWuACg8VUaRomTX9cPoC5A4eDsZaqzwjz85KdmOD8KcQKG16DcurAEnxlOvDWs8BAhYX25JMRPVhYjtPmEUrOQ3IQgB16716PfJoPIFWmSwTqWDQr8KGdYk1I=

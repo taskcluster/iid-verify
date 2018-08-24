@@ -1,8 +1,22 @@
 {
+  "name": "iid-verify",
+  "version": "1.0.0",
+  "description": "Validate instance identity documents from ec2",
   "dependencies": {
     "bindings": "^1.3.0",
     "node-gyp": "^3.7.0"
   },
+  "license": "MPL-2.0",
+  "author": "John Ford <jhford@mozilla.com>",
+  "main": "index.js",
+  "files": [
+    "README.md",
+    "binding.gyp",
+    "index.js",
+    "test.js",
+    "test-files",
+    "src"
+  ],
   "scripts": {
     "prepublish": "eslint --fix *.js && clang-format -i src/*.c src/*.h && node-gyp clean",
     "pretest": "node-gyp rebuild --debug",
