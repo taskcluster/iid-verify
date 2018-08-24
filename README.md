@@ -118,3 +118,13 @@ You will need:
   * electric-fence
 
 In order to run the full unit test suite
+
+On Ubuntu, try:
+```
+sudo apt-get install clang clang-format electric-fence valgrind
+```
+
+On Fedora, try:
+```
+sudo dnf install clang valgrind ElectricFence
+```

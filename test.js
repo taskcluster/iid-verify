@@ -1,3 +1,4 @@
+
 const subject = require('./');
 const assume = require('assume');
 const fs = require('fs');
@@ -44,7 +45,7 @@ describe('verify', () => {
   });
 
   describe('with bad values', () => {
-    it('should return false with empty Buffer values', () => {
+    it('should throw error with empty Buffer values', () => {
       assume(() => {
         subject(Buffer.from(''), Buffer.from(''), Buffer.from(''));
       }).throws(/VF_verify Exception$/);
@@ -211,10 +212,10 @@ describe('verify', () => {
             // and invalid PEM file
             let asn1Errors = [
               /ASN1_CHECK_TLEN/,
-              /ASN1_ITEM_EX_D2I/
+              /ASN1_ITEM_EX_D2I/,
             ];
             let isAcceptableError = false;
-            for (pattern of asn1Errors) {
+            for (let pattern of asn1Errors) {
               if (pattern.test(err.message)) {
                 isAcceptableError = true;
               }
