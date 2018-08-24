@@ -11,6 +11,9 @@ memtests: src/verify.c src/tests.c
 
 .PHONY: ctests
 ctests: src/verify.c src/tests.c
+	# Extra sanitizers
+	clang -g $? -o ./$@ -Wall -Wextra -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000 -fsanitize=undefined,integer,nullability
+	./$@
 	clang -g $? -o ./$@ -Wall -Wextra -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000
 	./$@
 	gcc -g $? -o ./$@ -Wall -Wextra -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000

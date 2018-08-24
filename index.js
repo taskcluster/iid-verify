@@ -1,3 +1,4 @@
+
 const addon = require('bindings')('glue');
 
 const pkcs7_header = Buffer.from('-----BEGIN PKCS7-----');
@@ -9,6 +10,9 @@ const nl = Buffer.from('\n');
  * signature.  All parameters should either be strings, Buffers or something
  * which can be converted into a Buffer safely with a call to Buffer.from(),
  * with an encoding parameter of 'utf-8'.
+ *
+ * For more detailed explanation of this functions return values and error
+ * handling, please refer to README.md in the Api and Errors sections
  */
 module.exports = function verify(pubkey, document, pkcs7) {
   if (typeof pubkey === 'undefined') {
@@ -35,7 +39,7 @@ module.exports = function verify(pubkey, document, pkcs7) {
     pkcs7 = Buffer.from(pkcs7, 'utf-8');
   }
 
-  hasHeader = false;
+  let hasHeader = false;
   if (pkcs7.length > pkcs7_header.length - 1) {
     if (Buffer.compare(pkcs7_header, pkcs7.slice(0, pkcs7_header.length)) === 0) {
       hasHeader = true;
