@@ -1,0 +1,18 @@
+language: node_js
+dist: trusty
+node_js:
+  - "10"
+addons:
+  apt:
+    packages:
+      - clang
+      - electric-fence
+      - valgrind
+      - g++-4.8
+env:
+  global:
+    - CC=gcc-4.8
+    - CXX=g++-4.8
+script:
+  - yarn test
+  - make test

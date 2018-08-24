@@ -16,7 +16,7 @@ ctests: src/verify.c src/tests.c
 	./$@
 	clang -g $? -o ./$@ -Wall -Wextra -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000
 	./$@
-	gcc -g $? -o ./$@ -Wall -Wextra -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000
+	gcc -g $? -o ./$@ -Wall -Wextra -Werror -lcrypto -DVF_DEBUG=1 -DBENCH_ITER=1000 -std=c99
 	./$@
 
 .PHONY: shell-tests
@@ -28,5 +28,5 @@ format:
 	clang-format -i src/*.c src/*.h
 
 .PHONY: test
-test: format memtests ctests shell-tests
+test: memtests ctests shell-tests
 	@echo These unit tests passed
